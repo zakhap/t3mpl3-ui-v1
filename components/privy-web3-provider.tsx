@@ -7,6 +7,14 @@ import { createConfig, http } from 'wagmi'
 import { mainnet, sepolia } from 'wagmi/chains'
 import { ReactNode, useState, useEffect } from 'react'
 
+// Get the current URL for proper WalletConnect configuration
+const getAppUrl = () => {
+  if (typeof window !== 'undefined') {
+    return window.location.origin
+  }
+  return 'https://t3mpl3-ui-v1.vercel.app'
+}
+
 // Create Wagmi config for Privy - minimal setup
 const wagmiConfig = createConfig({
   chains: [mainnet, sepolia],
@@ -16,13 +24,30 @@ const wagmiConfig = createConfig({
   },
 })
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: false,
+// Ensure single instance of query client
+let queryClient: QueryClient
+if (typeof window !== 'undefined') {
+  // Client-side: create or reuse existing
+  if (!(window as any).__queryClient) {
+    (window as any).__queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+      },
+    })
+  }
+  queryClient = (window as any).__queryClient
+} else {
+  // Server-side: always create new
+  queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
     },
-  },
-})
+  })
+}
 
 interface PrivyWeb3ProviderProps {
   children: ReactNode
@@ -49,6 +74,7 @@ export default function PrivyWeb3Provider({ children }: PrivyWeb3ProviderProps) 
           theme: 'dark',
           accentColor: '#00ff00',
           logo: undefined,
+          showWalletLoginFirst: true, // Explicitly set to true to silence warning
         },
         // Completely disable embedded wallets
         embeddedWallets: {

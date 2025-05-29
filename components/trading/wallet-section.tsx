@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Wallet, Copy } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { usePrivy } from '@privy-io/react-auth'
+import BalanceDisplay from "@/components/balance-display"
 
 interface WalletSectionProps {
   themeColor: string
@@ -80,9 +81,14 @@ export default function WalletSection({ themeColor }: WalletSectionProps) {
             </div>
             <div className="flex justify-between">
               <span>ETH BALANCE:</span>
-              <span className="font-mono">
-                Loading...
-              </span>
+              {user?.wallet?.address ? (
+                <BalanceDisplay 
+                  address={user.wallet.address} 
+                  themeColor={themeColor}
+                />
+              ) : (
+                <span className="font-mono">0.0000</span>
+              )}
             </div>
             <Button
               onClick={logout}
