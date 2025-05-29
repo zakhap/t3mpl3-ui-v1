@@ -92,13 +92,21 @@ export default function WalletSection({ themeColor }: WalletSectionProps) {
             </div>
             <Button
               onClick={logout}
-              className="w-full text-xs py-1 bg-black hover:text-black mt-2"
+              className="w-full text-xs py-1 bg-black mt-2"
               style={{
                 border: `1px solid ${themeColor}`,
                 color: themeColor,
+                backgroundColor: 'black',
+                transition: 'none', // Remove any CSS transitions
               }}
-              onMouseEnter={(e) => (e.target.style.backgroundColor = themeColor)}
-              onMouseLeave={(e) => (e.target.style.backgroundColor = "black")}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = themeColor
+                e.target.style.color = 'black'
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = 'black'
+                e.target.style.color = themeColor
+              }}
             >
               DISCONNECT
             </Button>
