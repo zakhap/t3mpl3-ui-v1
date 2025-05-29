@@ -20,10 +20,11 @@ export default function Ticker({ themeColor, themeBg }: TickerProps) {
       {/* Ticker Tooltip */}
       {showTooltip && (
         <div
-          className="fixed z-50 pointer-events-none text-xs px-2 py-1 bg-black border"
+          className="fixed z-50 pointer-events-none text-xs px-2 py-1 border"
           style={{
             left: mousePos.x + 10,
             top: mousePos.y + 20,
+            backgroundColor: '#1c1c1c',
             border: `1px solid ${themeColor}`,
             color: themeColor,
           }}
@@ -33,8 +34,9 @@ export default function Ticker({ themeColor, themeBg }: TickerProps) {
       )}
 
       <div
-        className="bg-black overflow-hidden whitespace-nowrap sticky top-0 z-50"
+        className="overflow-hidden whitespace-nowrap sticky top-0 z-50"
         style={{ 
+          backgroundColor: '#1c1c1c',
           border: `1px solid ${themeColor}`,
           boxShadow: `0px 3px 0px ${themeColor}`
         }}

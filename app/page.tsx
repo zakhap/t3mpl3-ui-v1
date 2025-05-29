@@ -17,7 +17,7 @@ export default function T3MPL3Trading() {
   const templeFund = 234567
 
   const isRedMode = activeTab === "sell"
-  const themeColor = isRedMode ? "#ff0000" : "#00ff00"
+  const themeColor = isRedMode ? "#cc7744" : "#44cc77"
   const themeBg = isRedMode ? "bg-red-500" : "bg-green-500"
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -29,10 +29,11 @@ export default function T3MPL3Trading() {
       {/* Tooltip for disabled trading */}
       {showTooltip && (
         <div
-          className="fixed z-50 pointer-events-none text-xs px-2 py-1 bg-black border"
+          className="fixed z-50 pointer-events-none text-xs px-2 py-1 border"
           style={{
             left: mousePos.x + 10,
             top: mousePos.y - 25,
+            backgroundColor: '#1c1c1c',
             border: `1px solid ${themeColor}`,
             color: themeColor,
           }}

@@ -55,10 +55,11 @@
     @apply border-border;
   }
   html {
-    @apply bg-black;
+    background-color: #1c1c1c;
   }
   body {
-    @apply bg-black text-foreground;
+    background-color: #1c1c1c;
+    @apply text-foreground;
   }
 }
 
@@ -73,12 +74,12 @@
 }
 
 .terminal-bg {
-  background-color: #000000;
+  background-color: #1c1c1c;
 }
 
-/* Ensure black background everywhere */
+/* Ensure warm dark gray background everywhere */
 html, body, #__next, [data-nextjs-scroll-focus-boundary] {
-  background-color: #000000 !important;
+  background-color: #1c1c1c !important;
 }
 
 /* Fix for mobile overscroll */
@@ -88,32 +89,32 @@ html {
 
 body {
   overscroll-behavior: none;
-  background-color: #000000 !important;
+  background-color: #1c1c1c !important;
 }
 
 .terminal-input {
-  background-color: #000000;
-  border: 1px solid #00ff00;
-  color: #00ff00;
+  background-color: #1c1c1c;
+  border: 1px solid #44cc77;
+  color: #44cc77;
   font-family: "Courier New", monospace;
 }
 
 .terminal-input:focus {
   outline: none;
-  box-shadow: 0 0 0 1px #00ff00;
+  box-shadow: 0 0 0 1px #44cc77;
 }
 
 .terminal-button {
-  background-color: #000000;
-  border: 1px solid #00ff00;
-  color: #00ff00;
+  background-color: #1c1c1c;
+  border: 1px solid #44cc77;
+  color: #44cc77;
   font-family: "Courier New", monospace;
   text-transform: uppercase;
 }
 
 .terminal-button:hover {
-  background-color: #00ff00;
-  color: #000000;
+  background-color: #44cc77;
+  color: #1c1c1c;
 }
 
 /* Ticker Animation */

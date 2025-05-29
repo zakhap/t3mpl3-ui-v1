@@ -61,16 +61,23 @@ export default function WalletSection({ themeColor }: WalletSectionProps) {
           <div className="space-y-2">
             <Button
               onClick={login}
-              className="w-full text-xs py-3 bg-black hover:text-black font-mono font-bold"
+              className="w-full text-xs py-3 font-mono font-bold"
               style={{
                 border: `2px solid ${themeColor}`,
                 color: themeColor,
+                backgroundColor: '#1c1c1c',
                 boxShadow: pressedButton === 'connect' ? 'none' : `3px 3px 0px ${themeColor}`,
                 transform: pressedButton === 'connect' ? 'translate(3px, 3px)' : 'translate(0, 0)',
               }}
               onMouseDown={() => handleButtonPress('connect')}
-              onMouseEnter={(e) => (e.target.style.backgroundColor = themeColor)}
-              onMouseLeave={(e) => (e.target.style.backgroundColor = "black")}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = themeColor
+                e.target.style.color = '#1c1c1c'
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = "#1c1c1c"
+                e.target.style.color = themeColor
+              }}
             >
               <Wallet className="mr-2 h-3 w-3" />
               [CONNECT WALLET]
@@ -113,21 +120,21 @@ export default function WalletSection({ themeColor }: WalletSectionProps) {
             </div>
             <Button
               onClick={logout}
-              className="w-full text-xs py-3 bg-black mt-2 font-mono font-bold"
+              className="w-full text-xs py-3 mt-2 font-mono font-bold"
               style={{
                 border: `2px solid ${themeColor}`,
                 color: themeColor,
-                backgroundColor: 'black',
+                backgroundColor: '#1c1c1c',
                 boxShadow: pressedButton === 'disconnect' ? 'none' : `3px 3px 0px ${themeColor}`,
                 transform: pressedButton === 'disconnect' ? 'translate(3px, 3px)' : 'translate(0, 0)',
               }}
               onMouseDown={() => handleButtonPress('disconnect')}
               onMouseEnter={(e) => {
                 e.target.style.backgroundColor = themeColor
-                e.target.style.color = 'black'
+                e.target.style.color = '#1c1c1c'
               }}
               onMouseLeave={(e) => {
-                e.target.style.backgroundColor = 'black'
+                e.target.style.backgroundColor = '#1c1c1c'
                 e.target.style.color = themeColor
               }}
             >

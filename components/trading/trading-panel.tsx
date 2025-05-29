@@ -62,7 +62,8 @@ export default function TradingPanel({
           className="w-full"
         >
           <TabsList 
-            className={`grid w-full grid-cols-2 bg-black ${!isConnected ? 'pointer-events-none' : ''}`}
+            className={`grid w-full grid-cols-2 ${!isConnected ? 'pointer-events-none' : ''}`}
+            style={{ backgroundColor: '#1c1c1c' }}
             style={{ border: `1px solid ${themeColor}` }}
           >
             <TabsTrigger
@@ -98,7 +99,7 @@ export default function TradingPanel({
                       style={{
                         border: `2px solid ${themeColor}`,
                         color: themeColor,
-                        backgroundColor: '#111111',
+                        backgroundColor: '#2a2a2a',
                         caretColor: themeColor,
                         outline: 'none',
                       }}
@@ -122,10 +123,11 @@ export default function TradingPanel({
                   </div>
                 </div>
                 <Button
-                  className="w-full text-xs py-3 bg-black font-mono font-bold"
+                  className="w-full text-xs py-3 font-mono font-bold"
                   style={{
                     border: `2px solid ${themeColor}`,
                     color: themeColor,
+                    backgroundColor: '#1c1c1c',
                     boxShadow: pressedButton === 'buy' ? 'none' : `3px 3px 0px ${themeColor}`,
                     transform: pressedButton === 'buy' ? 'translate(3px, 3px)' : 'translate(0, 0)',
                   }}
@@ -133,12 +135,12 @@ export default function TradingPanel({
                   onMouseEnter={(e) => {
                     if (isConnected) {
                       e.target.style.backgroundColor = themeColor
-                      e.target.style.color = 'black'
+                      e.target.style.color = '#1c1c1c'
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (isConnected) {
-                      e.target.style.backgroundColor = "black"
+                      e.target.style.backgroundColor = "#1c1c1c"
                       e.target.style.color = themeColor
                     }
                   }}
@@ -167,7 +169,7 @@ export default function TradingPanel({
                       style={{
                         border: `2px solid ${themeColor}`,
                         color: themeColor,
-                        backgroundColor: '#111111',
+                        backgroundColor: '#2a2a2a',
                         caretColor: themeColor,
                         outline: 'none',
                       }}
@@ -194,10 +196,11 @@ export default function TradingPanel({
                   </div>
                 </div>
                 <Button
-                  className="w-full text-xs py-3 bg-black font-mono font-bold"
+                  className="w-full text-xs py-3 font-mono font-bold"
                   style={{
                     border: `2px solid ${themeColor}`,
                     color: themeColor,
+                    backgroundColor: '#1c1c1c',
                     boxShadow: pressedButton === 'sell' ? 'none' : `3px 3px 0px ${themeColor}`,
                     transform: pressedButton === 'sell' ? 'translate(3px, 3px)' : 'translate(0, 0)',
                   }}
@@ -205,12 +208,12 @@ export default function TradingPanel({
                   onMouseEnter={(e) => {
                     if (isConnected) {
                       e.target.style.backgroundColor = themeColor
-                      e.target.style.color = 'black'
+                      e.target.style.color = '#1c1c1c'
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (isConnected) {
-                      e.target.style.backgroundColor = "black"
+                      e.target.style.backgroundColor = "#1c1c1c"
                       e.target.style.color = themeColor
                     }
                   }}
