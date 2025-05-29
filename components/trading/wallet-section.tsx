@@ -12,11 +12,17 @@ interface WalletSectionProps {
 
 export default function WalletSection({ themeColor }: WalletSectionProps) {
   const [mounted, setMounted] = useState(false)
+  const [pressedButton, setPressedButton] = useState<string | null>(null)
   const { login, logout, authenticated, user } = usePrivy()
   
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  const handleButtonPress = (buttonId: string) => {
+    setPressedButton(buttonId)
+    setTimeout(() => setPressedButton(null), 150)
+  }
   
   const formatAddress = (addr: string) => {
     return `${addr.slice(0, 6)}...${addr.slice(-4)}`
@@ -24,9 +30,15 @@ export default function WalletSection({ themeColor }: WalletSectionProps) {
 
   if (!mounted) {
     return (
-      <div className="p-4 mb-4" style={{ border: `1px solid ${themeColor}` }}>
+      <div className="p-4 mb-4">
         <div className="text-xs mb-2">WALLET CONNECTION</div>
-        <div className="p-2" style={{ border: `1px solid ${themeColor}` }}>
+        <div 
+          className="p-2" 
+          style={{ 
+            border: `1px solid ${themeColor}`,
+            boxShadow: `2px 2px 0px ${themeColor}`
+          }}
+        >
           <div className="text-xs">Loading...</div>
         </div>
       </div>
@@ -34,25 +46,34 @@ export default function WalletSection({ themeColor }: WalletSectionProps) {
   }
 
   return (
-    <div className="p-4 mb-4" style={{ border: `1px solid ${themeColor}` }}>
+    <div className="p-4 mb-4">
       <div className="text-xs mb-2">
         {authenticated ? "WALLET INFORMATION" : "WALLET CONNECTION"}
       </div>
-      <div className="p-2" style={{ border: `1px solid ${themeColor}` }}>
+      <div 
+        className="p-2" 
+        style={{ 
+          border: `1px solid ${themeColor}`,
+          boxShadow: `2px 2px 0px ${themeColor}`
+        }}
+      >
         {!authenticated ? (
           <div className="space-y-2">
             <Button
               onClick={login}
-              className="w-full text-xs py-1 bg-black hover:text-black"
+              className="w-full text-xs py-3 bg-black hover:text-black font-mono font-bold"
               style={{
-                border: `1px solid ${themeColor}`,
+                border: `2px solid ${themeColor}`,
                 color: themeColor,
+                boxShadow: pressedButton === 'connect' ? 'none' : `3px 3px 0px ${themeColor}`,
+                transform: pressedButton === 'connect' ? 'translate(3px, 3px)' : 'translate(0, 0)',
               }}
+              onMouseDown={() => handleButtonPress('connect')}
               onMouseEnter={(e) => (e.target.style.backgroundColor = themeColor)}
               onMouseLeave={(e) => (e.target.style.backgroundColor = "black")}
             >
               <Wallet className="mr-2 h-3 w-3" />
-              CONNECT WALLET
+              [CONNECT WALLET]
             </Button>
           </div>
         ) : (
@@ -92,13 +113,15 @@ export default function WalletSection({ themeColor }: WalletSectionProps) {
             </div>
             <Button
               onClick={logout}
-              className="w-full text-xs py-1 bg-black mt-2"
+              className="w-full text-xs py-3 bg-black mt-2 font-mono font-bold"
               style={{
-                border: `1px solid ${themeColor}`,
+                border: `2px solid ${themeColor}`,
                 color: themeColor,
                 backgroundColor: 'black',
-                transition: 'none', // Remove any CSS transitions
+                boxShadow: pressedButton === 'disconnect' ? 'none' : `3px 3px 0px ${themeColor}`,
+                transform: pressedButton === 'disconnect' ? 'translate(3px, 3px)' : 'translate(0, 0)',
               }}
+              onMouseDown={() => handleButtonPress('disconnect')}
               onMouseEnter={(e) => {
                 e.target.style.backgroundColor = themeColor
                 e.target.style.color = 'black'
@@ -108,7 +131,7 @@ export default function WalletSection({ themeColor }: WalletSectionProps) {
                 e.target.style.color = themeColor
               }}
             >
-              DISCONNECT
+              [DISCONNECT]
             </Button>
           </div>
         )}

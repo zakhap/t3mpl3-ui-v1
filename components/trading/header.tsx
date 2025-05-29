@@ -4,7 +4,13 @@ interface HeaderProps {
 
 export default function Header({ themeColor }: HeaderProps) {
   return (
-    <div className="p-4 mb-4" style={{ border: `1px solid ${themeColor}` }}>
+    <div 
+      className="p-4 mb-4" 
+      style={{ 
+        border: `1px solid ${themeColor}`,
+        boxShadow: `4px 4px 0px ${themeColor}`
+      }}
+    >
       <div className="text-center">
         <pre className="text-2xl mb-2">
           {`

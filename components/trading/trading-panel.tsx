@@ -29,6 +29,7 @@ export default function TradingPanel({
   const [buyAmount, setBuyAmount] = useState("")
   const [sellAmount, setSellAmount] = useState("")
   const [mounted, setMounted] = useState(false)
+  const [pressedButton, setPressedButton] = useState<string | null>(null)
   const { authenticated } = usePrivy()
   
   useEffect(() => {
@@ -37,15 +38,23 @@ export default function TradingPanel({
   
   const isConnected = mounted && authenticated
 
+  const handleButtonPress = (buttonId: string) => {
+    setPressedButton(buttonId)
+    setTimeout(() => setPressedButton(null), 150)
+  }
+
   return (
     <div 
       className={`p-4 ${!isConnected ? 'opacity-50 cursor-not-allowed' : ''}`}
-      style={{ border: `1px solid ${themeColor}` }}
+      style={{ 
+        border: `2px double ${themeColor}`,
+        boxShadow: `5px 5px 0px ${themeColor}`
+      }}
       onMouseMove={!isConnected ? onMouseMove : undefined}
       onMouseEnter={!isConnected ? onMouseEnter : undefined}
       onMouseLeave={!isConnected ? onMouseLeave : undefined}
     >
-      <div className="text-xs mb-2">TRADE $T3MPL3</div>
+      <div className="text-sm font-bold mb-2">TRADE $T3MPL3</div>
       <div className="space-y-2">
         <Tabs 
           value={activeTab} 
@@ -77,20 +86,31 @@ export default function TradingPanel({
               <div className="space-y-2">
                 <div>
                   <Label htmlFor="buy-amount" className="text-xs">
-                    AMOUNT (ETH):
+                    > AMOUNT (ETH):
                   </Label>
-                  <Input
-                    id="buy-amount"
-                    value={buyAmount}
-                    onChange={(e) => setBuyAmount(e.target.value)}
-                    placeholder="0.0000"
-                    className="text-xs h-8 bg-black font-mono"
-                    style={{
-                      border: `1px solid ${themeColor}`,
-                      color: themeColor,
-                    }}
-                    disabled={!isConnected}
-                  />
+                  <div className="relative">
+                    <Input
+                      id="buy-amount"
+                      value={buyAmount}
+                      onChange={(e) => setBuyAmount(e.target.value)}
+                      placeholder="0.0000"
+                      className="text-xs h-10 font-mono pl-6"
+                      style={{
+                        border: `2px solid ${themeColor}`,
+                        color: themeColor,
+                        backgroundColor: '#111111',
+                        caretColor: themeColor,
+                        outline: 'none',
+                      }}
+                      disabled={!isConnected}
+                    />
+                    <span 
+                      className="absolute left-2 top-1/2 transform -translate-y-1/2 text-xs font-mono pointer-events-none"
+                      style={{ color: themeColor }}
+                    >
+                      >
+                    </span>
+                  </div>
                 </div>
                 <div className="text-xs space-y-1">
                   <div>
@@ -102,16 +122,29 @@ export default function TradingPanel({
                   </div>
                 </div>
                 <Button
-                  className="w-full text-xs py-1 bg-black hover:text-black"
+                  className="w-full text-xs py-3 bg-black font-mono font-bold"
                   style={{
-                    border: `1px solid ${themeColor}`,
+                    border: `2px solid ${themeColor}`,
                     color: themeColor,
+                    boxShadow: pressedButton === 'buy' ? 'none' : `3px 3px 0px ${themeColor}`,
+                    transform: pressedButton === 'buy' ? 'translate(3px, 3px)' : 'translate(0, 0)',
                   }}
-                  onMouseEnter={(e) => isConnected && (e.target.style.backgroundColor = themeColor)}
-                  onMouseLeave={(e) => isConnected && (e.target.style.backgroundColor = "black")}
+                  onMouseDown={() => handleButtonPress('buy')}
+                  onMouseEnter={(e) => {
+                    if (isConnected) {
+                      e.target.style.backgroundColor = themeColor
+                      e.target.style.color = 'black'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (isConnected) {
+                      e.target.style.backgroundColor = "black"
+                      e.target.style.color = themeColor
+                    }
+                  }}
                   disabled={!isConnected}
                 >
-                  EXECUTE BUY
+                  [EXECUTE BUY]
                 </Button>
               </div>
             </div>
@@ -122,20 +155,31 @@ export default function TradingPanel({
               <div className="space-y-2">
                 <div>
                   <Label htmlFor="sell-amount" className="text-xs">
-                    AMOUNT ($T3MPL3):
+                    > AMOUNT ($T3MPL3):
                   </Label>
-                  <Input
-                    id="sell-amount"
-                    value={sellAmount}
-                    onChange={(e) => setSellAmount(e.target.value)}
-                    placeholder="0"
-                    className="text-xs h-8 bg-black font-mono"
-                    style={{
-                      border: `1px solid ${themeColor}`,
-                      color: themeColor,
-                    }}
-                    disabled={!isConnected}
-                  />
+                  <div className="relative">
+                    <Input
+                      id="sell-amount"
+                      value={sellAmount}
+                      onChange={(e) => setSellAmount(e.target.value)}
+                      placeholder="0"
+                      className="text-xs h-10 font-mono pl-6"
+                      style={{
+                        border: `2px solid ${themeColor}`,
+                        color: themeColor,
+                        backgroundColor: '#111111',
+                        caretColor: themeColor,
+                        outline: 'none',
+                      }}
+                      disabled={!isConnected}
+                    />
+                    <span 
+                      className="absolute left-2 top-1/2 transform -translate-y-1/2 text-xs font-mono pointer-events-none"
+                      style={{ color: themeColor }}
+                    >
+                      >
+                    </span>
+                  </div>
                 </div>
                 <div className="text-xs space-y-1">
                   <div>
@@ -150,16 +194,29 @@ export default function TradingPanel({
                   </div>
                 </div>
                 <Button
-                  className="w-full text-xs py-1 bg-black hover:text-black"
+                  className="w-full text-xs py-3 bg-black font-mono font-bold"
                   style={{
-                    border: `1px solid ${themeColor}`,
+                    border: `2px solid ${themeColor}`,
                     color: themeColor,
+                    boxShadow: pressedButton === 'sell' ? 'none' : `3px 3px 0px ${themeColor}`,
+                    transform: pressedButton === 'sell' ? 'translate(3px, 3px)' : 'translate(0, 0)',
                   }}
-                  onMouseEnter={(e) => isConnected && (e.target.style.backgroundColor = themeColor)}
-                  onMouseLeave={(e) => isConnected && (e.target.style.backgroundColor = "black")}
+                  onMouseDown={() => handleButtonPress('sell')}
+                  onMouseEnter={(e) => {
+                    if (isConnected) {
+                      e.target.style.backgroundColor = themeColor
+                      e.target.style.color = 'black'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (isConnected) {
+                      e.target.style.backgroundColor = "black"
+                      e.target.style.color = themeColor
+                    }
+                  }}
                   disabled={!isConnected}
                 >
-                  EXECUTE SELL
+                  [EXECUTE SELL]
                 </Button>
               </div>
             </div>
