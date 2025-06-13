@@ -54,7 +54,7 @@ export default function TradingPanel({
       onMouseEnter={!isConnected ? onMouseEnter : undefined}
       onMouseLeave={!isConnected ? onMouseLeave : undefined}
     >
-      <div className="text-sm font-bold mb-2">TRADE $T3MPL3</div>
+      <div className="text-sm font-bold mb-2">TRADE ETH/USDC</div>
       <div className="space-y-2">
         <Tabs 
           value={activeTab} 
@@ -114,11 +114,11 @@ export default function TradingPanel({
                 </div>
                 <div className="text-xs space-y-1">
                   <div>
-                    RECEIVE: ~{buyAmount ? (Number.parseFloat(buyAmount) / currentPrice).toFixed(0) : "0"}{" "}
-                    $T3MPL3
+                    RECEIVE: ~{buyAmount ? (Number.parseFloat(buyAmount) * currentPrice).toFixed(2) : "0.00"}{" "}
+                    USDC
                   </div>
                   <div>
-                    DONATION: ~${buyAmount ? (Number.parseFloat(buyAmount) * 0.003 * 3000).toFixed(2) : "0.00"}
+                    FEE: ~${buyAmount ? (Number.parseFloat(buyAmount) * currentPrice * 0.003).toFixed(2) : "0.00"}
                   </div>
                 </div>
                 <Button
@@ -145,7 +145,7 @@ export default function TradingPanel({
                   }}
                   disabled={!isConnected}
                 >
-                  [EXECUTE BUY]
+                  [BUY ETH]
                 </Button>
               </div>
             </div>
@@ -156,7 +156,7 @@ export default function TradingPanel({
               <div className="space-y-2">
                 <div>
                   <Label htmlFor="sell-amount" className="text-xs">
-                    {'>'} AMOUNT ($T3MPL3):
+                    {'>'} AMOUNT (USDC):
                   </Label>
                   <div className="relative">
                     <Input
@@ -185,12 +185,12 @@ export default function TradingPanel({
                 <div className="text-xs space-y-1">
                   <div>
                     RECEIVE: ~
-                    {sellAmount ? (Number.parseFloat(sellAmount) * currentPrice).toFixed(4) : "0.0000"} ETH
+                    {sellAmount ? (Number.parseFloat(sellAmount) / currentPrice).toFixed(6) : "0.000000"} ETH
                   </div>
                   <div>
-                    DONATION: ~$
+                    FEE: ~$
                     {sellAmount
-                      ? (Number.parseFloat(sellAmount) * currentPrice * 0.003 * 3000).toFixed(2)
+                      ? (Number.parseFloat(sellAmount) * 0.003).toFixed(2)
                       : "0.00"}
                   </div>
                 </div>
@@ -218,7 +218,7 @@ export default function TradingPanel({
                   }}
                   disabled={!isConnected}
                 >
-                  [EXECUTE SELL]
+                  [SELL ETH]
                 </Button>
               </div>
             </div>

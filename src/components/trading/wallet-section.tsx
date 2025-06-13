@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Wallet, Copy } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { usePrivy } from '@privy-io/react-auth'
-import BalanceDisplay from "@/components/balance-display"
+import { useWalletBalancesWithState } from '@/hooks/use-wallet-balances'
 
 interface WalletSectionProps {
   themeColor: string
@@ -14,6 +14,7 @@ export default function WalletSection({ themeColor }: WalletSectionProps) {
   const [mounted, setMounted] = useState(false)
   const [pressedButton, setPressedButton] = useState<string | null>(null)
   const { login, logout, authenticated, user } = usePrivy()
+  const { ethBalance, usdcBalance, loading: balancesLoading, formattedEth, formattedUsdc } = useWalletBalancesWithState()
   
   useEffect(() => {
     setMounted(true)
@@ -109,14 +110,23 @@ export default function WalletSection({ themeColor }: WalletSectionProps) {
             </div>
             <div className="flex justify-between">
               <span>ETH BALANCE:</span>
-              {user?.wallet?.address ? (
-                <BalanceDisplay 
-                  address={user.wallet.address} 
-                  themeColor={themeColor}
-                />
-              ) : (
-                <span className="font-mono">0.0000</span>
-              )}
+              <span className="font-mono" style={{ color: themeColor }}>
+                {balancesLoading ? (
+                  <span className="animate-pulse">...</span>
+                ) : (
+                  formattedEth
+                )}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span>USDC BALANCE:</span>
+              <span className="font-mono" style={{ color: themeColor }}>
+                {balancesLoading ? (
+                  <span className="animate-pulse">...</span>
+                ) : (
+                  formattedUsdc
+                )}
+              </span>
             </div>
             <Button
               onClick={logout}

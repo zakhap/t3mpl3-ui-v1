@@ -6,15 +6,19 @@ import Header from "@/components/trading/header"
 import WalletSection from "@/components/trading/wallet-section"
 import PriceDisplay from "@/components/trading/price-display"
 import TradingPanel from "@/components/trading/trading-panel"
+import { useETHPriceWithState } from "@/hooks/use-eth-price"
 
-export default function T3MPL3Trading() {
+export default function ETHUSDCTrading() {
   const [activeTab, setActiveTab] = useState("buy")
   const [showTooltip, setShowTooltip] = useState(false)
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
 
-  const currentPrice = 0.0028
-  const holders = 1337
-  const templeFund = 234567
+  // Real ETH price data
+  const { price: currentPrice, loading: priceLoading, formattedPrice } = useETHPriceWithState()
+  
+  // Mock data for now (will be real in future phases)
+  const volume24h = 1250000 // 24h volume in USDC
+  const totalLiquidity = 5400000 // Total liquidity in USDC
 
   const isRedMode = activeTab === "sell"
   const themeColor = isRedMode ? "#cc7744" : "#44cc77"
@@ -58,7 +62,12 @@ export default function T3MPL3Trading() {
               boxShadow: `4px 4px 0px ${themeColor}`
             }}
           >
-            <PriceDisplay themeColor={themeColor} currentPrice={currentPrice} />
+            <PriceDisplay 
+              themeColor={themeColor} 
+              currentPrice={currentPrice}
+              formattedPrice={formattedPrice}
+              loading={priceLoading}
+            />
             
             {/* Statistics underneath current price */}
             <div className="mt-4">
@@ -72,12 +81,12 @@ export default function T3MPL3Trading() {
               >
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-xs">HOLDERS:</span>
-                    <span className="text-sm">{holders.toLocaleString()}</span>
+                    <span className="text-xs">24H VOLUME:</span>
+                    <span className="text-sm">${volume24h.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-xs">TEMPLE FUND:</span>
-                    <span className="text-sm">${templeFund.toLocaleString()}</span>
+                    <span className="text-xs">LIQUIDITY:</span>
+                    <span className="text-sm">${totalLiquidity.toLocaleString()}</span>
                   </div>
                 </div>
               </div>
@@ -113,18 +122,18 @@ export default function T3MPL3Trading() {
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
               <div>
-                <div className="mb-2">► TAX DEDUCTIONS:</div>
-                <div className="ml-4 mb-2">TRADING FEES BECOME CHARITABLE DONATIONS</div>
+                <div className="mb-2">► DECENTRALIZED TRADING:</div>
+                <div className="ml-4 mb-2">POWERED BY UNISWAP V4/V3 ON BASE NETWORK</div>
 
-                <div className="mb-2">► HISTORIC BUILDING:</div>
-                <div className="ml-4 mb-2">BUYING A 200-YEAR-OLD BROOKLYN TEMPLE</div>
+                <div className="mb-2">► LOW FEES:</div>
+                <div className="ml-4 mb-2">0.3% TRADING FEES WITH OPTIMIZED GAS COSTS</div>
               </div>
               <div>
-                <div className="mb-2">► FINANCIAL INNOVATION:</div>
-                <div className="ml-4 mb-2">SUBVERTING TRADITIONAL FUNDRAISING</div>
+                <div className="mb-2">► TERMINAL INTERFACE:</div>
+                <div className="ml-4 mb-2">RETRO COMPUTING AESTHETIC FOR MODERN DEFI</div>
 
                 <div className="mb-2">► MISSION:</div>
-                <div className="ml-4 mb-2">"THIS MEME IS A WRITE-OFF, BUT DON'T WRITE IT OFF."</div>
+                <div className="ml-4 mb-2">"TRADE WITH STYLE IN THE TERMINAL FUTURE."</div>
               </div>
             </div>
           </div>
@@ -139,9 +148,9 @@ export default function T3MPL3Trading() {
           }}
         >
           <div className="text-center text-xs">
-            <span>TRADING FEES DONATED TO </span>
-            <span style={{ color: themeColor }}>QUBIT</span>
-            <span>, A NYC-BASED NON-PROFIT</span>
+            <span>DECENTRALIZED ETH/USDC TRADING ON </span>
+            <span style={{ color: themeColor }}>BASE NETWORK</span>
+            <span> WITH TERMINAL STYLE</span>
             <span className="blink ml-2">█</span>
           </div>
         </div>
