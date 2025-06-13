@@ -1,61 +1,58 @@
 import { useQuery } from '@tanstack/react-query'
 
-// External price feed endpoints
-const PRICE_FEEDS = {
-  COINGECKO_ETH_USD: 'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd',
-  COINBASE_ETH_USD: 'https://api.exchange.coinbase.com/products/ETH-USD/ticker',
-  BINANCE_ETH_USDT: 'https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDT',
-} as const
+// Uniswap V3 ETH/USDC pool on Base (0.05% fee tier)
+const UNISWAP_V3_ETH_USDC_POOL = '0xd0b53D9277642d899DF5C87A3966A349A798F224'
+const BASE_RPC_URL = 'https://mainnet.base.org'
 
-// Fetch price from external API with fallbacks
+// Fetch ETH price from Uniswap V3 pool on Base
 async function fetchETHPrice(): Promise<number> {
-  // Try CoinGecko first (most reliable)
   try {
-    const response = await fetch(PRICE_FEEDS.COINGECKO_ETH_USD)
+    // Call slot0() to get current price
+    const response = await fetch(BASE_RPC_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        method: 'eth_call',
+        params: [
+          {
+            to: UNISWAP_V3_ETH_USDC_POOL,
+            data: '0x3850c7bd', // slot0() function selector
+          },
+          'latest'
+        ],
+        id: 1,
+      }),
+    })
+
     const data = await response.json()
     
-    if (data.ethereum?.usd && typeof data.ethereum.usd === 'number') {
-      console.log('✅ CoinGecko ETH price:', data.ethereum.usd)
-      return data.ethereum.usd
+    if (data.result) {
+      // Parse sqrtPriceX96 from slot0 result (first 32 bytes)
+      const sqrtPriceX96 = BigInt('0x' + data.result.slice(2, 66))
+      
+      // Calculate price using proper decimal math
+      // sqrtPriceX96 = sqrt(price) * 2^96
+      // price = (sqrtPriceX96 / 2^96)^2
+      const Q96 = 2n ** 96n
+      const sqrtPrice = Number(sqrtPriceX96) / Number(Q96)
+      
+      // ETH/USDC price - USDC has 6 decimals, ETH has 18 decimals
+      // Price is in terms of token0/token1, need to adjust for decimals and invert
+      const rawPrice = sqrtPrice ** 2
+      const ethPrice = rawPrice * (10 ** 12) // Adjust for decimal difference (18-6=12)
+      
+      console.log('✅ Uniswap V3 ETH price:', ethPrice)
+      return ethPrice
     }
-    throw new Error('Invalid CoinGecko response')
-  } catch (error) {
-    console.warn('⚠️ CoinGecko failed:', error)
-  }
-
-  // Fallback to Coinbase
-  try {
-    const response = await fetch(PRICE_FEEDS.COINBASE_ETH_USD)
-    const data = await response.json()
     
-    if (data.price && typeof data.price === 'string') {
-      const price = parseFloat(data.price)
-      console.log('✅ Coinbase ETH price:', price)
-      return price
-    }
-    throw new Error('Invalid Coinbase response')
+    throw new Error('No result from Uniswap pool')
   } catch (error) {
-    console.warn('⚠️ Coinbase failed:', error)
+    console.warn('⚠️ Uniswap V3 failed:', error)
+    return 3500 // Fallback price
   }
-
-  // Fallback to Binance
-  try {
-    const response = await fetch(PRICE_FEEDS.BINANCE_ETH_USDT)
-    const data = await response.json()
-    
-    if (data.price && typeof data.price === 'string') {
-      const price = parseFloat(data.price)
-      console.log('✅ Binance ETH price:', price)
-      return price
-    }
-    throw new Error('Invalid Binance response')
-  } catch (error) {
-    console.warn('⚠️ Binance failed:', error)
-  }
-
-  // If all APIs fail, return a reasonable fallback
-  console.warn('❌ All price feeds failed, using fallback')
-  return 3500
 }
 
 // Main hook for fetching ETH price
@@ -68,13 +65,13 @@ export function useETHPrice() {
       return {
         price,
         timestamp: Date.now(),
-        source: 'external-api',
+        source: 'uniswap-v3',
       }
     },
-    refetchInterval: 30000, // Refetch every 30 seconds
-    staleTime: 15000,       // Consider data stale after 15 seconds
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    refetchInterval: 10000, // Refetch every 10 seconds (faster for DEX prices)
+    staleTime: 5000,        // Consider data stale after 5 seconds
+    retry: 2,
+    retryDelay: 1000,
   })
 }
 
@@ -90,8 +87,8 @@ export function useETHPriceWithState() {
     timestamp: data?.timestamp,
     // Formatted price for display
     formattedPrice: data?.price ? `$${data.price.toLocaleString('en-US', { 
-      minimumFractionDigits: 0, 
-      maximumFractionDigits: 0 
-    })}` : '$3,500',
+      minimumFractionDigits: 2, 
+      maximumFractionDigits: 2 
+    })}` : '$3,500.00',
   }
 }
