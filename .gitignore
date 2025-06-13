@@ -3,9 +3,9 @@
 # dependencies
 /node_modules
 
-# next.js
-/.next/
-/out/
+# Vite
+/dist/
+.vite/
 
 # production
 /build
@@ -24,4 +24,11 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
+
+# IDEs
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

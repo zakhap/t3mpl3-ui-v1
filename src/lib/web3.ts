@@ -3,7 +3,7 @@ import { cookieStorage, createStorage } from 'wagmi'
 import { mainnet, sepolia } from 'wagmi/chains'
 
 // Get projectId from https://cloud.walletconnect.com
-export const projectId = process.env.NEXT_PUBLIC_PROJECT_ID || 'temp-project-id'
+export const projectId = import.meta.env.VITE_PROJECT_ID || 'temp-project-id'
 
 // More lenient project ID check
 console.log('Using project ID:', projectId)

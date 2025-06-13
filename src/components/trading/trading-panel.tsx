@@ -63,8 +63,7 @@ export default function TradingPanel({
         >
           <TabsList 
             className={`grid w-full grid-cols-2 ${!isConnected ? 'pointer-events-none' : ''}`}
-            style={{ backgroundColor: '#1c1c1c' }}
-            style={{ border: `1px solid ${themeColor}` }}
+            style={{ backgroundColor: '#1c1c1c', border: `1px solid ${themeColor}` }}
           >
             <TabsTrigger
               value="buy"
@@ -87,7 +86,7 @@ export default function TradingPanel({
               <div className="space-y-2">
                 <div>
                   <Label htmlFor="buy-amount" className="text-xs">
-                    > AMOUNT (ETH):
+                    {'>'} AMOUNT (ETH):
                   </Label>
                   <div className="relative">
                     <Input
@@ -109,7 +108,7 @@ export default function TradingPanel({
                       className="absolute left-2 top-1/2 transform -translate-y-1/2 text-xs font-mono pointer-events-none"
                       style={{ color: themeColor }}
                     >
-                      >
+                      {'>'}
                     </span>
                   </div>
                 </div>
@@ -157,7 +156,7 @@ export default function TradingPanel({
               <div className="space-y-2">
                 <div>
                   <Label htmlFor="sell-amount" className="text-xs">
-                    > AMOUNT ($T3MPL3):
+                    {'>'} AMOUNT ($T3MPL3):
                   </Label>
                   <div className="relative">
                     <Input
@@ -179,7 +178,7 @@ export default function TradingPanel({
                       className="absolute left-2 top-1/2 transform -translate-y-1/2 text-xs font-mono pointer-events-none"
                       style={{ color: themeColor }}
                     >
-                      >
+                      {'>'}
                     </span>
                   </div>
                 </div>
