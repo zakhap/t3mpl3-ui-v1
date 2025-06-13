@@ -1,57 +1,66 @@
 import { useQuery } from '@tanstack/react-query'
+import { createPublicClient, http } from 'viem'
+import { base } from 'viem/chains'
+import PoolManagerABI from '@/lib/PoolManager.json'
 
-// Uniswap V3 ETH/USDC pool on Base (0.05% fee tier)
-const UNISWAP_V3_ETH_USDC_POOL = '0xd0b53D9277642d899DF5C87A3966A349A798F224'
+// Uniswap V4 contracts on Base
+const UNISWAP_V4_POOL_MANAGER = '0x498581ff718922c3f8e6a244956af099b2652b2b' // Base Uniswap V4 PoolManager
+const ETH_USD_POOL_ID = '0x00a14e98a2250c7a9b97e0d73a271c7f390c3393cddb0e538507739f6429ea7f'
 const BASE_RPC_URL = 'https://mainnet.base.org'
 
-// Fetch ETH price from Uniswap V3 pool on Base
+// Create viem public client for Base
+const publicClient = createPublicClient({
+  chain: base,
+  transport: http(BASE_RPC_URL),
+})
+
+// Export for use in other files
+export const BASE_UNISWAP_V4_POOL_MANAGER = UNISWAP_V4_POOL_MANAGER
+
+// Fetch ETH price from Uniswap V4 PoolManager on Base
 async function fetchETHPrice(): Promise<number> {
   try {
-    // Call slot0() to get current price
-    const response = await fetch(BASE_RPC_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        jsonrpc: '2.0',
-        method: 'eth_call',
-        params: [
-          {
-            to: UNISWAP_V3_ETH_USDC_POOL,
-            data: '0x3850c7bd', // slot0() function selector
-          },
-          'latest'
-        ],
-        id: 1,
-      }),
+    // Use getSlot0 with the pool ID
+    const poolState = await publicClient.readContract({
+      address: UNISWAP_V4_POOL_MANAGER,
+      abi: PoolManagerABI,
+      functionName: 'getSlot0',
+      args: [ETH_USD_POOL_ID],
     })
-
-    const data = await response.json()
     
-    if (data.result) {
-      // Parse sqrtPriceX96 from slot0 result (first 32 bytes)
-      const sqrtPriceX96 = BigInt('0x' + data.result.slice(2, 66))
-      
-      // Calculate price using proper decimal math
-      // sqrtPriceX96 = sqrt(price) * 2^96
-      // price = (sqrtPriceX96 / 2^96)^2
+    console.log('🔍 V4 Pool State:', poolState)
+    
+    // poolState should contain [sqrtPriceX96, tick, protocolFee, lpFee]
+    const sqrtPriceX96 = poolState[0] as bigint
+    
+    if (sqrtPriceX96 > 0n) {
       const Q96 = 2n ** 96n
       const sqrtPrice = Number(sqrtPriceX96) / Number(Q96)
-      
-      // ETH/USDC price - USDC has 6 decimals, ETH has 18 decimals
-      // Price is in terms of token0/token1, need to adjust for decimals and invert
       const rawPrice = sqrtPrice ** 2
-      const ethPrice = rawPrice * (10 ** 12) // Adjust for decimal difference (18-6=12)
+      const ethPrice = rawPrice * (10 ** 12) // Adjust for decimal difference
       
-      console.log('✅ Uniswap V3 ETH price:', ethPrice)
+      console.log('✅ Uniswap V4 ETH price:', ethPrice)
       return ethPrice
     }
     
-    throw new Error('No result from Uniswap pool')
+    throw new Error('Invalid V4 pool state')
   } catch (error) {
-    console.warn('⚠️ Uniswap V3 failed:', error)
-    return 3500 // Fallback price
+    console.warn('⚠️ Uniswap V4 failed, using CoinGecko fallback:', error)
+    
+    // Fallback to CoinGecko
+    try {
+      const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd')
+      const data = await response.json()
+      
+      if (data.ethereum?.usd && typeof data.ethereum.usd === 'number') {
+        console.log('✅ CoinGecko ETH price:', data.ethereum.usd)
+        return data.ethereum.usd
+      }
+    } catch (fallbackError) {
+      console.warn('⚠️ CoinGecko also failed:', fallbackError)
+    }
+    
+    return 3500 // Final fallback
   }
 }
 
@@ -65,7 +74,7 @@ export function useETHPrice() {
       return {
         price,
         timestamp: Date.now(),
-        source: 'uniswap-v3',
+        source: 'uniswap-v4',
       }
     },
     refetchInterval: 10000, // Refetch every 10 seconds (faster for DEX prices)

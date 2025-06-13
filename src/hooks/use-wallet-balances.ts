@@ -1,82 +1,75 @@
 import { useQuery } from '@tanstack/react-query'
 import { usePrivy } from '@privy-io/react-auth'
+import { createPublicClient, http, getContract, formatEther, formatUnits } from 'viem'
+import { base } from 'viem/chains'
 
-// Mainnet contract addresses
-const MAINNET_USDC = '0xA0b86a33E6441056F39b4c3a48C30b8C83D2Ffa7' // USDC on mainnet
-const SEPOLIA_USDC = '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238' // USDC on sepolia (for testing)
+// Base network contract addresses - let's verify this is correct
+const BASE_USDC = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' // USDC on Base
 
-// Simple balance fetching using public RPC
+// ERC20 ABI for balanceOf
+const ERC20_ABI = [
+  {
+    constant: true,
+    inputs: [{ name: '_owner', type: 'address' }],
+    name: 'balanceOf',
+    outputs: [{ name: 'balance', type: 'uint256' }],
+    type: 'function',
+  },
+] as const
+
+// Create viem public client for Base
+const publicClient = createPublicClient({
+  chain: base,
+  transport: http('https://mainnet.base.org'),
+})
+
+// Fetch ETH balance using viem
 async function fetchETHBalance(address: string): Promise<string> {
   try {
-    // Using public Ethereum RPC
-    const response = await fetch('https://eth.llamarpc.com', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        jsonrpc: '2.0',
-        method: 'eth_getBalance',
-        params: [address, 'latest'],
-        id: 1,
-      }),
+    console.log('🔍 Fetching ETH balance for:', address)
+    const balance = await publicClient.getBalance({
+      address: address as `0x${string}`,
     })
     
-    const data = await response.json()
-    
-    if (data.result) {
-      // Convert hex to decimal and format
-      const balanceWei = BigInt(data.result)
-      const balanceEth = Number(balanceWei) / Math.pow(10, 18)
-      return balanceEth.toFixed(4)
-    }
-    
-    return '0.0000'
+    console.log('💰 Raw ETH balance:', balance.toString())
+    const balanceEth = formatEther(balance)
+    console.log('💰 Formatted ETH balance:', balanceEth)
+    return parseFloat(balanceEth).toFixed(4)
   } catch (error) {
     console.warn('Failed to fetch ETH balance:', error)
     return '0.0000'
   }
 }
 
-// Fetch USDC balance using ERC20 balanceOf call
+// Fetch USDC balance using viem contract
 async function fetchUSDCBalance(address: string): Promise<string> {
   try {
-    // ERC20 balanceOf function signature
-    const balanceOfSignature = '0x70a08231'
-    const paddedAddress = address.slice(2).padStart(64, '0')
-    const data = balanceOfSignature + paddedAddress
+    console.log('🔍 Fetching USDC balance for:', address)
+    console.log('🔍 USDC contract address:', BASE_USDC)
     
-    const response = await fetch('https://eth.llamarpc.com', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        jsonrpc: '2.0',
-        method: 'eth_call',
-        params: [
-          {
-            to: MAINNET_USDC,
-            data: data,
-          },
-          'latest'
-        ],
-        id: 1,
-      }),
+    // Use readContract directly instead of getContract
+    const balance = await publicClient.readContract({
+      address: BASE_USDC,
+      abi: ERC20_ABI,
+      functionName: 'balanceOf',
+      args: [address as `0x${string}`],
     })
     
-    const result = await response.json()
+    console.log('💰 Raw USDC balance (BigInt):', balance)
+    console.log('💰 Raw USDC balance (string):', balance.toString())
+    console.log('💰 Raw USDC balance === 0n?', balance === 0n)
     
-    if (result.result && result.result !== '0x') {
-      // Convert hex to decimal and format (USDC has 6 decimals)
-      const balanceRaw = BigInt(result.result)
-      const balanceUsdc = Number(balanceRaw) / Math.pow(10, 6)
-      return balanceUsdc.toFixed(2)
-    }
+    // USDC has 6 decimals
+    const balanceUsdc = formatUnits(balance, 6)
+    console.log('💰 Formatted USDC balance:', balanceUsdc)
+    console.log('💰 ParseFloat result:', parseFloat(balanceUsdc))
     
-    return '0.00'
+    const finalBalance = parseFloat(balanceUsdc).toFixed(2)
+    console.log('💰 Final formatted balance:', finalBalance)
+    
+    return finalBalance
   } catch (error) {
-    console.warn('Failed to fetch USDC balance:', error)
+    console.error('❌ Failed to fetch USDC balance:', error)
     return '0.00'
   }
 }
@@ -94,6 +87,10 @@ export function useWalletBalances() {
       }
 
       console.log('🔍 Fetching balances for:', walletAddress)
+      console.log('🔍 Using Base USDC contract:', BASE_USDC)
+      
+      // Check what network the public client is actually using
+      console.log('🔍 Public client chain ID:', publicClient.chain.id)
 
       // Fetch both balances in parallel
       const [ethBalance, usdcBalance] = await Promise.all([
@@ -101,8 +98,8 @@ export function useWalletBalances() {
         fetchUSDCBalance(walletAddress),
       ])
 
-      console.log('💰 ETH Balance:', ethBalance)
-      console.log('💰 USDC Balance:', usdcBalance)
+      console.log('💰 Final ETH Balance:', ethBalance)
+      console.log('💰 Final USDC Balance:', usdcBalance)
 
       return {
         eth: ethBalance,
