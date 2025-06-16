@@ -1,45 +1,33 @@
 'use client'
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { usePrivy } from '@privy-io/react-auth'
 import { useBuySwap, useSellSwap, QuoteManager } from '@/lib/uniswap-v4'
 import { usePublicClient } from 'wagmi'
-import { parseEther } from 'viem'
 import { toast } from 'sonner'
 
-interface TradingPanelProps {
+interface TradingPanelInnerProps {
   themeColor: string
   currentPrice: number
   activeTab: string
   setActiveTab: (tab: string) => void
-  onMouseMove?: (e: React.MouseEvent) => void
-  onMouseEnter?: () => void
-  onMouseLeave?: () => void
 }
 
-export default function TradingPanel({
+export default function TradingPanelInner({
   themeColor,
   currentPrice,
   activeTab,
-  setActiveTab,
-  onMouseMove,
-  onMouseEnter,
-  onMouseLeave
-}: TradingPanelProps) {
+  setActiveTab
+}: TradingPanelInnerProps) {
   const [buyAmount, setBuyAmount] = useState("")
   const [sellAmount, setSellAmount] = useState("")
-  const [mounted, setMounted] = useState(false)
   const [pressedButton, setPressedButton] = useState<string | null>(null)
-  const { authenticated } = usePrivy()
+  const publicClient = usePublicClient()
   
-  // Only use wagmi hooks if mounted and authenticated
-  const publicClient = mounted && authenticated ? usePublicClient() : null
-  
-  // Swap hooks with callbacks - only initialize if we have a client
+  // Swap hooks with callbacks
   const buySwap = useBuySwap({
     onSwapStart: () => {
       toast.info('Initiating buy transaction...')
@@ -65,12 +53,6 @@ export default function TradingPanel({
       toast.error(`Sell failed: ${error}`)
     }
   })
-  
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-  
-  const isConnected = mounted && authenticated
 
   const handleButtonPress = (buttonId: string) => {
     setPressedButton(buttonId)
@@ -150,37 +132,32 @@ export default function TradingPanel({
 
   return (
     <div 
-      className={`p-4 ${!isConnected ? 'opacity-50 cursor-not-allowed' : ''}`}
+      className="p-4"
       style={{ 
         border: `2px double ${themeColor}`,
         boxShadow: `5px 5px 0px ${themeColor}`
       }}
-      onMouseMove={!isConnected ? onMouseMove : undefined}
-      onMouseEnter={!isConnected ? onMouseEnter : undefined}
-      onMouseLeave={!isConnected ? onMouseLeave : undefined}
     >
       <div className="text-sm font-bold mb-2">TRADE ETH/USDC</div>
       <div className="space-y-2">
         <Tabs 
           value={activeTab} 
-          onValueChange={isConnected ? setActiveTab : undefined} 
+          onValueChange={setActiveTab} 
           className="w-full"
         >
           <TabsList 
-            className={`grid w-full grid-cols-2 ${!isConnected ? 'pointer-events-none' : ''}`}
+            className="grid w-full grid-cols-2"
             style={{ backgroundColor: '#1c1c1c', border: `1px solid ${themeColor}` }}
           >
             <TabsTrigger
               value="buy"
               className="data-[state=active]:bg-green-500 data-[state=active]:text-black text-green-500 text-xs"
-              disabled={!isConnected}
             >
               BUY
             </TabsTrigger>
             <TabsTrigger
               value="sell"
               className="data-[state=active]:bg-red-500 data-[state=active]:text-black text-red-500 text-xs"
-              disabled={!isConnected}
             >
               SELL
             </TabsTrigger>
@@ -207,7 +184,7 @@ export default function TradingPanel({
                         caretColor: themeColor,
                         outline: 'none',
                       }}
-                      disabled={!isConnected}
+                      disabled={isTransacting}
                     />
                     <span 
                       className="absolute left-2 top-1/2 transform -translate-y-1/2 text-xs font-mono pointer-events-none"
@@ -237,19 +214,17 @@ export default function TradingPanel({
                   }}
                   onMouseDown={() => handleButtonPress('buy')}
                   onMouseEnter={(e) => {
-                    if (isConnected && !isTransacting) {
+                    if (!isTransacting) {
                       e.target.style.backgroundColor = themeColor
                       e.target.style.color = '#1c1c1c'
                     }
                   }}
                   onMouseLeave={(e) => {
-                    if (isConnected) {
-                      e.target.style.backgroundColor = "#1c1c1c"
-                      e.target.style.color = themeColor
-                    }
+                    e.target.style.backgroundColor = "#1c1c1c"
+                    e.target.style.color = themeColor
                   }}
                   onClick={handleBuy}
-                  disabled={!isConnected || isTransacting}
+                  disabled={isTransacting}
                 >
                   {isBuying ? '[BUYING...]' : '[BUY USDC]'}
                 </Button>
@@ -278,7 +253,7 @@ export default function TradingPanel({
                         caretColor: themeColor,
                         outline: 'none',
                       }}
-                      disabled={!isConnected}
+                      disabled={isTransacting}
                     />
                     <span 
                       className="absolute left-2 top-1/2 transform -translate-y-1/2 text-xs font-mono pointer-events-none"
@@ -311,19 +286,17 @@ export default function TradingPanel({
                   }}
                   onMouseDown={() => handleButtonPress('sell')}
                   onMouseEnter={(e) => {
-                    if (isConnected && !isTransacting) {
+                    if (!isTransacting) {
                       e.target.style.backgroundColor = themeColor
                       e.target.style.color = '#1c1c1c'
                     }
                   }}
                   onMouseLeave={(e) => {
-                    if (isConnected) {
-                      e.target.style.backgroundColor = "#1c1c1c"
-                      e.target.style.color = themeColor
-                    }
+                    e.target.style.backgroundColor = "#1c1c1c"
+                    e.target.style.color = themeColor
                   }}
                   onClick={handleSell}
-                  disabled={!isConnected || isTransacting}
+                  disabled={isTransacting}
                 >
                   {isSelling ? '[SELLING...]' : '[SELL USDC]'}
                 </Button>

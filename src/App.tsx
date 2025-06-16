@@ -5,7 +5,7 @@ import Ticker from "@/components/trading/ticker"
 import Header from "@/components/trading/header"
 import WalletSection from "@/components/trading/wallet-section"
 import PriceDisplay from "@/components/trading/price-display"
-import TradingPanel from "@/components/trading/trading-panel"
+import TradingPanel from "@/components/trading/trading-panel-wrapper"
 import { useETHPriceWithState } from "@/hooks/use-eth-price"
 
 export default function ETHUSDCTrading() {

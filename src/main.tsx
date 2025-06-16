@@ -6,6 +6,7 @@ import './patterns.css'
 import { ThemeProvider } from '@/components/theme-provider'
 import PrivyWeb3Provider from '@/components/privy-web3-provider'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { Toaster } from 'sonner'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -22,6 +23,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <PrivyWeb3Provider>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
           <App />
+          <Toaster theme="dark" position="top-right" />
         </ThemeProvider>
       </PrivyWeb3Provider>
     </QueryClientProvider>

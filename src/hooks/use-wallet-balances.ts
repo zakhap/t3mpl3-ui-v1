@@ -17,10 +17,10 @@ const ERC20_ABI = [
   },
 ] as const
 
-// Create viem public client for Base
+// Create viem public client for Base with Alchemy
 const publicClient = createPublicClient({
   chain: base,
-  transport: http('https://mainnet.base.org'),
+  transport: http('https://base-mainnet.g.alchemy.com/v2/g0r1SYyQzVqIv28OW67TTaMVGivvJ09Z'),
 })
 
 // Fetch ETH balance using viem
@@ -34,10 +34,10 @@ async function fetchETHBalance(address: string): Promise<string> {
     console.log('💰 Raw ETH balance:', balance.toString())
     const balanceEth = formatEther(balance)
     console.log('💰 Formatted ETH balance:', balanceEth)
-    return parseFloat(balanceEth).toFixed(4)
+    return parseFloat(balanceEth).toFixed(6)
   } catch (error) {
     console.warn('Failed to fetch ETH balance:', error)
-    return '0.0000'
+    return '0.000000'
   }
 }
 
@@ -122,14 +122,14 @@ export function useWalletBalancesWithState() {
   const { authenticated } = usePrivy()
   
   return {
-    ethBalance: data?.eth || '0.0000',
+    ethBalance: data?.eth || '0.000000',
     usdcBalance: data?.usdc || '0.00',
     loading: isLoading,
     error: isError ? error : null,
     connected: authenticated,
     refetch,
     // Formatted for display
-    formattedEth: data?.eth ? `${data.eth} ETH` : '0.0000 ETH',
+    formattedEth: data?.eth ? `${data.eth} ETH` : '0.000000 ETH',
     formattedUsdc: data?.usdc ? `${data.usdc} USDC` : '0.00 USDC',
   }
 }

@@ -20,8 +20,11 @@ export default function PriceDisplay({ themeColor, currentPrice, formattedPrice,
           {loading ? (
             <span className="animate-pulse">Loading...</span>
           ) : (
-            formattedPrice || `$${currentPrice.toLocaleString()}`
-          )} <span className="text-sm">USDC</span>
+            formattedPrice || `1ETH = $${currentPrice.toLocaleString('en-US', { 
+              minimumFractionDigits: 2, 
+              maximumFractionDigits: 2 
+            })}`
+          )}
         </div>
         <div className="text-xs" style={{ color: themeColor }}>
           {loading ? (

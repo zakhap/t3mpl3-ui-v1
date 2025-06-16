@@ -1,51 +1,31 @@
 import { useQuery } from '@tanstack/react-query'
 import { createPublicClient, http } from 'viem'
 import { base } from 'viem/chains'
-import PoolManagerABI from '@/lib/PoolManager.json'
+import { QuoteManager } from '@/lib/uniswap-v4'
 
-// Uniswap V4 contracts on Base
-const UNISWAP_V4_POOL_MANAGER = '0x498581ff718922c3f8e6a244956af099b2652b2b' // Base Uniswap V4 PoolManager
-const ETH_USD_POOL_ID = '0x00a14e98a2250c7a9b97e0d73a271c7f390c3393cddb0e538507739f6429ea7f'
-const BASE_RPC_URL = 'https://mainnet.base.org'
-
-// Create viem public client for Base
+// Create viem public client for Base with Alchemy
 const publicClient = createPublicClient({
   chain: base,
-  transport: http(BASE_RPC_URL),
+  transport: http('https://base-mainnet.g.alchemy.com/v2/g0r1SYyQzVqIv28OW67TTaMVGivvJ09Z'),
 })
 
-// Export for use in other files
-export const BASE_UNISWAP_V4_POOL_MANAGER = UNISWAP_V4_POOL_MANAGER
-
-// Fetch ETH price from Uniswap V4 PoolManager on Base
+// Fetch ETH price from Uniswap V4 Quoter on Base
 async function fetchETHPrice(): Promise<number> {
   try {
-    // Use getSlot0 with the pool ID
-    const poolState = await publicClient.readContract({
-      address: UNISWAP_V4_POOL_MANAGER,
-      abi: PoolManagerABI,
-      functionName: 'getSlot0',
-      args: [ETH_USD_POOL_ID],
-    })
+    // Initialize QuoteManager with Base public client
+    const quoteManager = new QuoteManager(publicClient as any)
     
-    console.log('🔍 V4 Pool State:', poolState)
+    // Get current ETH price using V4 Quoter
+    const ethPrice = await quoteManager.getETHPrice()
     
-    // poolState should contain [sqrtPriceX96, tick, protocolFee, lpFee]
-    const sqrtPriceX96 = poolState[0] as bigint
-    
-    if (sqrtPriceX96 > 0n) {
-      const Q96 = 2n ** 96n
-      const sqrtPrice = Number(sqrtPriceX96) / Number(Q96)
-      const rawPrice = sqrtPrice ** 2
-      const ethPrice = rawPrice * (10 ** 12) // Adjust for decimal difference
-      
-      console.log('✅ Uniswap V4 ETH price:', ethPrice)
+    if (ethPrice && ethPrice > 0) {
+      console.log('✅ V4 Quoter ETH price:', ethPrice)
       return ethPrice
     }
     
-    throw new Error('Invalid V4 pool state')
+    throw new Error('Invalid V4 quote data')
   } catch (error) {
-    console.warn('⚠️ Uniswap V4 failed, using CoinGecko fallback:', error)
+    console.warn('⚠️ Uniswap V4 Quoter failed, using CoinGecko fallback:', error)
     
     // Fallback to CoinGecko
     try {
@@ -95,9 +75,9 @@ export function useETHPriceWithState() {
     error: isError ? error : null,
     timestamp: data?.timestamp,
     // Formatted price for display
-    formattedPrice: data?.price ? `$${data.price.toLocaleString('en-US', { 
+    formattedPrice: data?.price ? `1ETH = $${data.price.toLocaleString('en-US', { 
       minimumFractionDigits: 2, 
       maximumFractionDigits: 2 
-    })}` : '$3,500.00',
+    })}` : '1ETH = $3,500.00',
   }
 }
