@@ -66,6 +66,19 @@ export class QuoteManager {
    */
   async getQuote(params: QuoteParams): Promise<QuoteResult | null> {
     try {
+      console.log('📊 [QUOTE DEBUG] Starting quote with environment details:', {
+        timestamp: new Date().toISOString(),
+        chainId: await this.publicClient.getChainId(),
+        rpcUrl: this.publicClient.transport?.url || 'unknown',
+        quoterAddress: V4_QUOTER_ADDRESS,
+        params: {
+          poolKey: params.poolKey,
+          zeroForOne: params.zeroForOne,
+          exactAmount: params.exactAmount.toString(),
+          hookData: params.hookData
+        }
+      });
+
       const result = await this.publicClient.simulateContract({
         address: V4_QUOTER_ADDRESS,
         abi: V4_QUOTER_ABI,
@@ -75,12 +88,17 @@ export class QuoteManager {
 
       const [amountOut, gasEstimate] = result.result;
       
+      console.log('📊 [QUOTE DEBUG] Quote successful:', {
+        amountOut: amountOut.toString(),
+        gasEstimate: gasEstimate.toString()
+      });
+      
       return {
         amountOut,
         gasEstimate
       };
     } catch (error) {
-      console.error('Error getting quote:', error);
+      console.error('❌ [QUOTE DEBUG] Error getting quote:', error);
       return null;
     }
   }

@@ -101,24 +101,49 @@ export class SwapManager {
    * Encodes buy swap data (ETH -> USDC) using proper V4 encoding
    */
   private encodeBuyData(amountIn: string, minAmountOut: bigint): SwapData {
+    console.log('🔧 [DEBUG] Starting encodeBuyData with:', { amountIn, minAmountOut: minAmountOut.toString() });
+    
     const poolKey = getPoolKey();
+    console.log('🔧 [DEBUG] Pool key:', poolKey);
+    
     const parsedAmountIn = parseEther(amountIn);
+    console.log('🔧 [DEBUG] Parsed amount in (wei):', parsedAmountIn.toString());
+    
     const zeroForOne = getSwapDirection(true); // ETH -> USDC
+    console.log('🔧 [DEBUG] Swap direction zeroForOne:', zeroForOne);
     
     // Encode all components using utility functions
     const commands = encodeBuyCommands();
+    console.log('🔧 [DEBUG] Encoded commands:', commands);
+    
     const actions = encodeSwapActions();
+    console.log('🔧 [DEBUG] Encoded actions:', actions);
+    
     const swapParams = encodeSwapParams(poolKey, zeroForOne, amountIn, minAmountOut);
+    console.log('🔧 [DEBUG] Encoded swap params:', swapParams);
+    
     const settleParams = encodeSettleParams(poolKey.currency0, parsedAmountIn);
+    console.log('🔧 [DEBUG] Encoded settle params:', settleParams);
+    
     const takeParams = encodeTakeParams(poolKey.currency1, BigInt(0));
+    console.log('🔧 [DEBUG] Encoded take params:', takeParams);
     
     const inputs = encodeRouterInputs(actions, [swapParams, settleParams, takeParams]);
+    console.log('🔧 [DEBUG] Final encoded inputs:', inputs);
 
-    return {
+    const result = {
       commands,
       inputs: [inputs],
       value: parsedAmountIn // When buying, we send ETH
     };
+    
+    console.log('🔧 [DEBUG] encodeBuyData result:', {
+      commands: result.commands,
+      inputsLength: result.inputs.length,
+      value: result.value.toString()
+    });
+    
+    return result;
   }
 
   /**
@@ -126,29 +151,61 @@ export class SwapManager {
    */
   async executeBuySwap(params: SwapParams): Promise<SwapResult> {
     try {
+      console.log('🚀 [PRODUCTION DEBUG] Starting buy swap with full environment details:', {
+        timestamp: new Date().toISOString(),
+        chainId: await this.publicClient.getChainId(),
+        rpcUrl: this.publicClient.transport?.url || 'unknown',
+        universalRouter: UNIVERSAL_ROUTER_ADDRESS,
+        permit2: PERMIT2_ADDRESS,
+        usdc: USDC_ADDRESS,
+        nodeEnv: typeof window !== 'undefined' ? 'browser' : 'server',
+        viteEnv: import.meta.env?.MODE || 'unknown'
+      });
+
       await this.validateSwapPreconditions();
       
       console.log('🔄 Executing buy swap:', {
         amountIn: params.amountIn,
         minAmountOut: params.minAmountOut.toString(),
-        slippage: params.slippagePercent
+        slippage: params.slippagePercent,
+        userAddress: params.userAddress
       });
 
       const minAmountOut = calculateMinAmountOut(params.minAmountOut, params.slippagePercent);
+      console.log('🔧 [DEBUG] Calculated minAmountOut:', minAmountOut.toString());
+      
       const { commands, inputs, value } = this.encodeBuyData(params.amountIn, minAmountOut);
+      console.log('🔧 [DEBUG] Encoded swap data:', {
+        commands: commands,
+        inputsLength: inputs.length,
+        value: value.toString(),
+        poolKey: getPoolKey()
+      });
 
       // Get user address
       const [userAddress] = await this.walletClient!.getAddresses();
+      console.log('👤 [DEBUG] User address:', userAddress);
+
+      const deadline = createDeadline();
+      console.log('⏰ [DEBUG] Transaction deadline:', deadline);
 
       // Estimate gas
-      const gasEstimate = await this.publicClient.estimateContractGas({
-        address: UNIVERSAL_ROUTER_ADDRESS,
-        abi: UNIVERSAL_ROUTER_ABI,
-        functionName: "execute",
-        args: [commands, inputs, createDeadline()],
-        value,
-        account: userAddress
-      });
+      console.log('⛽ [DEBUG] Attempting gas estimation...');
+      let gasEstimate: bigint;
+      try {
+        gasEstimate = await this.publicClient.estimateContractGas({
+          address: UNIVERSAL_ROUTER_ADDRESS,
+          abi: UNIVERSAL_ROUTER_ABI,
+          functionName: "execute",
+          args: [commands, inputs, deadline],
+          value,
+          account: userAddress
+        });
+        console.log('⛽ [DEBUG] Gas estimation successful:', gasEstimate.toString());
+      } catch (gasError) {
+        console.error('❌ [DEBUG] Gas estimation failed:', gasError);
+        throw new Error(`Gas estimation failed: ${gasError.message}`);
+      }
 
       const gasLimit = calculateGasWithBuffer(gasEstimate);
 

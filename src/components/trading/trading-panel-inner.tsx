@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useBuySwap, useSellSwap, QuoteManager } from '@/lib/uniswap-v4'
 import { usePublicClient } from 'wagmi'
+import { usePrivy } from '@privy-io/react-auth'
 import { toast } from 'sonner'
 
 interface TradingPanelInnerProps {
@@ -26,6 +27,7 @@ export default function TradingPanelInner({
   const [sellAmount, setSellAmount] = useState("")
   const [pressedButton, setPressedButton] = useState<string | null>(null)
   const publicClient = usePublicClient()
+  const { user } = usePrivy()
   
   // Swap hooks with callbacks
   const buySwap = useBuySwap({
@@ -61,29 +63,60 @@ export default function TradingPanelInner({
   
   // Handle buy transaction
   const handleBuy = async () => {
+    console.log('🛒 [UI DEBUG] BUY button clicked - starting buy process:', {
+      timestamp: new Date().toISOString(),
+      buyAmount,
+      publicClientExists: !!publicClient,
+      walletConnected: !!user?.wallet?.address,
+      environment: {
+        nodeEnv: typeof window !== 'undefined' ? 'browser' : 'server',
+        viteMode: import.meta.env?.MODE,
+        isProduction: import.meta.env?.PROD
+      }
+    });
+
     if (!buyAmount || Number(buyAmount) <= 0) {
+      console.error('❌ [UI DEBUG] Invalid buy amount:', buyAmount);
       toast.error('Please enter a valid ETH amount')
       return
     }
     
     if (!publicClient) {
+      console.error('❌ [UI DEBUG] No public client available');
       toast.error('Network not connected')
       return
     }
     
     try {
+      // Get current chain ID for debugging
+      const chainId = await publicClient.getChainId();
+      console.log('🔗 [UI DEBUG] Current chain ID:', chainId);
+      
       // Get quote for minimum amount out (with 10% slippage tolerance)
+      console.log('📊 [UI DEBUG] Creating QuoteManager and requesting buy quote...');
       const quoteManager = new QuoteManager(publicClient)
       const quote = await quoteManager.getBuyQuote(buyAmount)
       
       if (!quote) {
+        console.error('❌ [UI DEBUG] Failed to get quote from QuoteManager');
         toast.error('Unable to get price quote')
         return
       }
       
+      console.log('📊 [UI DEBUG] Quote received successfully:', {
+        amountOut: quote.amountOut.toString(),
+        gasEstimate: quote.gasEstimate.toString()
+      });
+      
       // Calculate minimum amount out with 10% slippage
       const slippagePercent = 10
       const minAmountOut = (quote.amountOut * BigInt(100 - slippagePercent)) / BigInt(100)
+      
+      console.log('💰 [UI DEBUG] Starting buy swap execution with:', {
+        buyAmount,
+        minAmountOut: minAmountOut.toString(),
+        slippagePercent
+      });
       
       await buySwap.executeBuy(buyAmount, minAmountOut, slippagePercent)
     } catch (error) {

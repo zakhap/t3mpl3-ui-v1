@@ -12,6 +12,16 @@ export const STATE_VIEW_ADDRESS = '0xa3c0c9b65bad0b08107aa264b0f3db444b867a71';
 // Token Contracts  
 export const USDC_ADDRESS = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
 
+// Debug logging for contract addresses
+console.log('📋 [ADDRESSES DEBUG] Contract addresses loaded:', {
+  UNIVERSAL_ROUTER: UNIVERSAL_ROUTER_ADDRESS,
+  PERMIT2: PERMIT2_ADDRESS,
+  V4_QUOTER: V4_QUOTER_ADDRESS,
+  POOL_MANAGER: POOL_MANAGER_ADDRESS,
+  STATE_VIEW: STATE_VIEW_ADDRESS,
+  USDC: USDC_ADDRESS
+});
+
 // Addresses object for easier importing
 export const ADDRESSES = {
   UNIVERSAL_ROUTER: UNIVERSAL_ROUTER_ADDRESS,
