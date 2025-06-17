@@ -1,14 +1,26 @@
 'use client'
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+
+// TypeScript declarations for ethereum provider
+declare global {
+  interface Window {
+    ethereum?: {
+      chainId?: string
+      request: (args: { method: string; params?: any[] }) => Promise<any>
+    }
+  }
+}
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useBuySwap, useSellSwap, QuoteManager } from '@/lib/uniswap-v4'
-import { usePublicClient } from 'wagmi'
+import { usePublicClient, useAccount, useChainId } from 'wagmi'
 import { usePrivy } from '@privy-io/react-auth'
+import { base } from 'wagmi/chains'
 import { toast } from 'sonner'
+
 
 interface TradingPanelInnerProps {
   themeColor: string
@@ -26,8 +38,99 @@ export default function TradingPanelInner({
   const [buyAmount, setBuyAmount] = useState("")
   const [sellAmount, setSellAmount] = useState("")
   const [pressedButton, setPressedButton] = useState<string | null>(null)
+  const [actualChainId, setActualChainId] = useState<number | null>(null)
   const publicClient = usePublicClient()
-  const { user } = usePrivy()
+  const { user, authenticated } = usePrivy()
+  const { chainId: accountChainId } = useAccount()
+
+  // Network detection - same logic as wallet-section but simplified
+  useEffect(() => {
+    if (authenticated && typeof window !== 'undefined' && window.ethereum) {
+      const detectNetwork = async () => {
+        try {
+          const directChainId = window.ethereum.chainId
+          if (directChainId) {
+            const networkId = parseInt(directChainId, 16)
+            setActualChainId(networkId)
+          } else if (accountChainId) {
+            setActualChainId(accountChainId)
+          }
+        } catch (error) {
+          console.log('Network detection error:', error)
+          if (accountChainId) {
+            setActualChainId(accountChainId)
+          }
+        }
+      }
+      detectNetwork()
+    }
+  }, [authenticated, accountChainId])
+
+  // Check if user is on wrong network
+  const isOnWrongNetwork = actualChainId !== null && actualChainId !== 8453
+  const isNetworkDisabled = isOnWrongNetwork
+  
+  // Network switching state
+  const [isSwitchingNetwork, setIsSwitchingNetwork] = useState(false)
+  
+  // Switch to Base network
+  const switchToBase = async () => {
+    if (!window.ethereum) {
+      toast.error('Wallet not detected')
+      return
+    }
+    
+    setIsSwitchingNetwork(true)
+    
+    try {
+      // Request network switch to Base (0x2105 = 8453 in hex)
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: '0x2105' }],
+      })
+      
+      // Wait a moment for the network to switch, then re-detect
+      setTimeout(() => {
+        if (window.ethereum?.chainId) {
+          const newChainId = parseInt(window.ethereum.chainId, 16)
+          setActualChainId(newChainId)
+        }
+        setIsSwitchingNetwork(false)
+      }, 1000)
+      
+      toast.success('Switched to Base network')
+    } catch (error: any) {
+      console.error('Network switch error:', error)
+      
+      // If the network doesn't exist in wallet, add it
+      if (error.code === 4902) {
+        try {
+          await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [{
+              chainId: '0x2105',
+              chainName: 'Base',
+              nativeCurrency: {
+                name: 'Ethereum',
+                symbol: 'ETH',
+                decimals: 18,
+              },
+              rpcUrls: ['https://mainnet.base.org'],
+              blockExplorerUrls: ['https://basescan.org'],
+            }],
+          })
+          toast.success('Base network added and switched')
+        } catch (addError) {
+          console.error('Add network error:', addError)
+          toast.error('Failed to add Base network')
+        }
+      } else {
+        toast.error('Failed to switch network')
+      }
+      
+      setIsSwitchingNetwork(false)
+    }
+  }
   
   // Swap hooks with callbacks
   const buySwap = useBuySwap({
@@ -60,6 +163,7 @@ export default function TradingPanelInner({
     setPressedButton(buttonId)
     setTimeout(() => setPressedButton(null), 150)
   }
+
   
   // Handle buy transaction
   const handleBuy = async () => {
@@ -162,6 +266,10 @@ export default function TradingPanelInner({
   const isBuying = buySwap.isSwapping
   const isSelling = sellSwap.isSwapping
   const isTransacting = isBuying || isSelling
+  
+  // Disable buttons if on wrong network or transacting
+  const isButtonDisabled = isTransacting || isNetworkDisabled
+
 
   return (
     <div 
@@ -236,28 +344,57 @@ export default function TradingPanelInner({
                     FEE: ~${buyAmount ? (Number.parseFloat(buyAmount) * currentPrice * 0.003).toFixed(2) : "0.00"}
                   </div>
                 </div>
+                
+                {isOnWrongNetwork && (
+                  <Button
+                    onClick={switchToBase}
+                    disabled={isSwitchingNetwork}
+                    className="w-full text-xs py-2 font-mono font-bold mb-2"
+                    style={{
+                      border: '2px solid #ff6b6b',
+                      color: '#ff6b6b',
+                      backgroundColor: '#1c1c1c',
+                      boxShadow: isSwitchingNetwork ? 'none' : '3px 3px 0px #ff6b6b',
+                      transform: isSwitchingNetwork ? 'translate(3px, 3px)' : 'translate(0, 0)',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isSwitchingNetwork) {
+                        e.target.style.backgroundColor = '#ff6b6b'
+                        e.target.style.color = '#1c1c1c'
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.backgroundColor = '#1c1c1c'
+                      e.target.style.color = '#ff6b6b'
+                    }}
+                  >
+                    {isSwitchingNetwork ? '[SWITCHING...]' : '[SWITCH TO BASE NETWORK]'}
+                  </Button>
+                )}
+                
                 <Button
                   className="w-full text-xs py-3 font-mono font-bold"
                   style={{
-                    border: `2px solid ${themeColor}`,
-                    color: themeColor,
+                    border: `2px solid ${isNetworkDisabled ? '#666' : themeColor}`,
+                    color: isNetworkDisabled ? '#666' : themeColor,
                     backgroundColor: '#1c1c1c',
-                    boxShadow: pressedButton === 'buy' ? 'none' : `3px 3px 0px ${themeColor}`,
+                    boxShadow: pressedButton === 'buy' ? 'none' : `3px 3px 0px ${isNetworkDisabled ? '#666' : themeColor}`,
                     transform: pressedButton === 'buy' ? 'translate(3px, 3px)' : 'translate(0, 0)',
+                    cursor: isNetworkDisabled ? 'not-allowed' : 'pointer',
                   }}
-                  onMouseDown={() => handleButtonPress('buy')}
+                  onMouseDown={() => !isNetworkDisabled && handleButtonPress('buy')}
                   onMouseEnter={(e) => {
-                    if (!isTransacting) {
+                    if (!isNetworkDisabled) {
                       e.target.style.backgroundColor = themeColor
                       e.target.style.color = '#1c1c1c'
                     }
                   }}
                   onMouseLeave={(e) => {
                     e.target.style.backgroundColor = "#1c1c1c"
-                    e.target.style.color = themeColor
+                    e.target.style.color = isNetworkDisabled ? '#666' : themeColor
                   }}
                   onClick={handleBuy}
-                  disabled={isTransacting}
+                  disabled={isNetworkDisabled || isTransacting}
                 >
                   {isBuying ? '[BUYING...]' : '[BUY USDC]'}
                 </Button>
@@ -308,28 +445,57 @@ export default function TradingPanelInner({
                       : "0.00"}
                   </div>
                 </div>
+                
+                {isOnWrongNetwork && (
+                  <Button
+                    onClick={switchToBase}
+                    disabled={isSwitchingNetwork}
+                    className="w-full text-xs py-2 font-mono font-bold mb-2"
+                    style={{
+                      border: '2px solid #ff6b6b',
+                      color: '#ff6b6b',
+                      backgroundColor: '#1c1c1c',
+                      boxShadow: isSwitchingNetwork ? 'none' : '3px 3px 0px #ff6b6b',
+                      transform: isSwitchingNetwork ? 'translate(3px, 3px)' : 'translate(0, 0)',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isSwitchingNetwork) {
+                        e.target.style.backgroundColor = '#ff6b6b'
+                        e.target.style.color = '#1c1c1c'
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.backgroundColor = '#1c1c1c'
+                      e.target.style.color = '#ff6b6b'
+                    }}
+                  >
+                    {isSwitchingNetwork ? '[SWITCHING...]' : '[SWITCH TO BASE NETWORK]'}
+                  </Button>
+                )}
+                
                 <Button
                   className="w-full text-xs py-3 font-mono font-bold"
                   style={{
-                    border: `2px solid ${themeColor}`,
-                    color: themeColor,
+                    border: `2px solid ${isNetworkDisabled ? '#666' : themeColor}`,
+                    color: isNetworkDisabled ? '#666' : themeColor,
                     backgroundColor: '#1c1c1c',
-                    boxShadow: pressedButton === 'sell' ? 'none' : `3px 3px 0px ${themeColor}`,
+                    boxShadow: pressedButton === 'sell' ? 'none' : `3px 3px 0px ${isNetworkDisabled ? '#666' : themeColor}`,
                     transform: pressedButton === 'sell' ? 'translate(3px, 3px)' : 'translate(0, 0)',
+                    cursor: isNetworkDisabled ? 'not-allowed' : 'pointer',
                   }}
-                  onMouseDown={() => handleButtonPress('sell')}
+                  onMouseDown={() => !isNetworkDisabled && handleButtonPress('sell')}
                   onMouseEnter={(e) => {
-                    if (!isTransacting) {
+                    if (!isNetworkDisabled) {
                       e.target.style.backgroundColor = themeColor
                       e.target.style.color = '#1c1c1c'
                     }
                   }}
                   onMouseLeave={(e) => {
                     e.target.style.backgroundColor = "#1c1c1c"
-                    e.target.style.color = themeColor
+                    e.target.style.color = isNetworkDisabled ? '#666' : themeColor
                   }}
                   onClick={handleSell}
-                  disabled={isTransacting}
+                  disabled={isNetworkDisabled || isTransacting}
                 >
                   {isSelling ? '[SELLING...]' : '[SELL USDC]'}
                 </Button>

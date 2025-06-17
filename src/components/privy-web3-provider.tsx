@@ -19,17 +19,18 @@ const getAppUrl = () => {
 // Use the working hardcoded key for now to avoid environment variable issues
 const alchemyRpcUrl = 'https://base-mainnet.g.alchemy.com/v2/g0r1SYyQzVqIv28OW67TTaMVGivvJ09Z';
 
-console.log('🔧 [WAGMI CONFIG] Configuring wagmi with:', {
-  chains: ['Base mainnet'],
-  baseChainId: base.id,
+console.log('🔧 [WAGMI CONFIG] Configuring wagmi for SINGLE CHAIN - Base only:', {
+  chain: 'Base',
+  chainId: base.id,
   rpcUrl: alchemyRpcUrl,
+  chainsCount: 1,
   timestamp: new Date().toISOString()
 });
 
 const wagmiConfig = createConfig({
-  chains: [base], // Only Base mainnet
+  chains: [base], // Base network only - simple and clean
   transports: {
-    [base.id]: http(alchemyRpcUrl),
+    [base.id]: http(alchemyRpcUrl), // Base RPC
   },
 })
 
