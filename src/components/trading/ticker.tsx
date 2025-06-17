@@ -33,29 +33,24 @@ export default function Ticker({ themeColor, themeBg }: TickerProps) {
         </div>
       )}
 
-      <div
-        className="overflow-hidden whitespace-nowrap sticky top-0 z-50"
+      <a 
+        href="https://t3mpl3.netlify.app/" 
+        target="_blank"
+        rel="noopener noreferrer"
+        className="overflow-hidden whitespace-nowrap sticky top-0 z-50 block cursor-pointer"
         style={{ 
           backgroundColor: '#1c1c1c',
           border: `1px solid ${themeColor}`,
           boxShadow: `0px 3px 0px ${themeColor}`
         }}
+        onMouseMove={handleMouseMove}
+        onMouseEnter={() => setShowTooltip(true)}
+        onMouseLeave={() => setShowTooltip(false)}
       >
-        <div className="ticker py-1 px-4">
-          <a 
-            href="https://t3mpl3.netlify.app/" 
-            target="_blank"
-            rel="noopener noreferrer"
-            className="cursor-pointer px-2"
-            style={{ color: themeColor }}
-            onMouseMove={handleMouseMove}
-            onMouseEnter={() => setShowTooltip(true)}
-            onMouseLeave={() => setShowTooltip(false)}
-          >
-            {'MANIFESTO ░░░ '.repeat(20)}
-          </a>
+        <div className="ticker py-1 px-4" style={{ color: themeColor }}>
+          {'MANIFESTO ░░░ '.repeat(20)}
         </div>
-      </div>
+      </a>
     </>
   )
 }
