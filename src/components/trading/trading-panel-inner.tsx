@@ -292,7 +292,11 @@ export default function TradingPanelInner({
           >
             <TabsTrigger
               value="buy"
-              className="data-[state=active]:bg-green-500 data-[state=active]:text-black text-green-500 text-xs"
+              className="data-[state=active]:text-black text-xs"
+              style={{
+                backgroundColor: activeTab === 'buy' ? 'rgba(139, 183, 137, 1)' : 'transparent',
+                color: activeTab === 'buy' ? '#1c1c1c' : 'rgba(139, 183, 137, 1)'
+              }}
             >
               BUY
             </TabsTrigger>

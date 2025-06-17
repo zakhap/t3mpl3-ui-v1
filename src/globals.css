@@ -63,14 +63,17 @@
   }
 }
 
-/* MS-DOS Terminal Styles */
-.terminal-border {
+
+/* MS-DOS Terminal Styles
   border: 1px solid #00ff00;
+ */
+.terminal-border {
+  border: 1px solid rgba(139, 183, 137);
 }
 
 .terminal-text {
   font-family: "Courier New", monospace;
-  color: #00ff00;
+  color: rgba(139, 183, 137);
 }
 
 .terminal-bg {
@@ -94,26 +97,26 @@ body {
 
 .terminal-input {
   background-color: #1c1c1c;
-  border: 1px solid #44cc77;
-  color: #44cc77;
+  border: 1px solid rgba(139, 183, 137, 1);
+  color: rgba(139, 183, 137, 1);
   font-family: "Courier New", monospace;
 }
 
 .terminal-input:focus {
   outline: none;
-  box-shadow: 0 0 0 1px #44cc77;
+  box-shadow: 0 0 0 1px rgba(139, 183, 137, 1);
 }
 
 .terminal-button {
   background-color: #1c1c1c;
-  border: 1px solid #44cc77;
-  color: #44cc77;
+  border: 1px solid rgba(139, 183, 137, 1);
+  color: rgba(139, 183, 137, 1);
   font-family: "Courier New", monospace;
   text-transform: uppercase;
 }
 
 .terminal-button:hover {
-  background-color: #44cc77;
+  background-color: rgba(139, 183, 137, 1);
   color: #1c1c1c;
 }
 

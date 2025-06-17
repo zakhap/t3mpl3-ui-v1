@@ -21,7 +21,7 @@ export default function ETHUSDCTrading() {
   const totalLiquidity = 5400000 // Total liquidity in USDC
 
   const isRedMode = activeTab === "sell"
-  const themeColor = isRedMode ? "#cc7744" : "#44cc77"
+  const themeColor = isRedMode ? "#cc7744" : "rgba(139, 183, 137, 1)"
   const themeBg = isRedMode ? "bg-red-500" : "bg-green-500"
 
   const handleMouseMove = (e: React.MouseEvent) => {

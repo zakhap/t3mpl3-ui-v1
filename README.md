@@ -97,7 +97,7 @@ The app uses **Privy** as the primary wallet provider with external wallet suppo
 ### Terminal Aesthetic
 
 - **Typography**: Monospace fonts throughout
-- **Colors**: Dynamic green (#44cc77) for buy mode, red (#cc7744) for sell mode  
+- **Colors**: Dynamic green (rgba(139, 183, 137, 1)) for buy mode, red (#cc7744) for sell mode  
 - **Borders**: ASCII-style characters and box drawing
 - **Animations**: Subtle terminal-inspired effects
 
@@ -107,7 +107,7 @@ The interface dynamically changes colors based on trading mode:
 
 ```typescript
 // Buy mode (green theme)
-themeColor: '#44cc77'
+themeColor: 'rgba(139, 183, 137, 1)'
 
 // Sell mode (red theme)  
 themeColor: '#cc7744'

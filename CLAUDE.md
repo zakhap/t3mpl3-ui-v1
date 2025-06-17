@@ -29,7 +29,7 @@ The app uses **Privy** as the primary wallet connection provider (not Web3Modal)
 ### UI Architecture
 
 - **Theme System**: Dynamic color theming based on trading mode
-  - Green theme (`#44cc77`) for buy mode
+  - Green theme (`rgba(139, 183, 137, 1)`) for buy mode
   - Red theme (`#cc7744`) for sell mode
   - Terminal aesthetic with monospace fonts and retro styling
 
