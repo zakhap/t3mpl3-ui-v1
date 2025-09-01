@@ -36,7 +36,7 @@ export function calculateGasWithBuffer(gasEstimate: bigint, bufferPercent: numbe
  * Get swap direction for zeroForOne parameter
  */
 export function getSwapDirection(isBuying: boolean): boolean {
-  return isBuying; // ETH -> USDC = true (zeroForOne), USDC -> ETH = false
+  return isBuying; // ETH -> Temple = true (zeroForOne), Temple -> ETH = false
 }
 
 /**

@@ -4,7 +4,7 @@ import { PrivyProvider } from '@privy-io/react-auth'
 import { WagmiProvider } from '@privy-io/wagmi'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createConfig, http } from 'wagmi'
-import { base } from 'wagmi/chains'
+import { sepolia } from 'wagmi/chains'
 import { ReactNode, useState, useEffect } from 'react'
 
 // Get the current URL for proper WalletConnect configuration
@@ -15,22 +15,22 @@ const getAppUrl = () => {
   return 'https://t3mpl3-ui-v1.vercel.app'
 }
 
-// Create Wagmi config for Base mainnet with Alchemy RPC  
+// Create Wagmi config for Sepolia testnet with Alchemy RPC  
 // Use the working hardcoded key for now to avoid environment variable issues
-const alchemyRpcUrl = 'https://base-mainnet.g.alchemy.com/v2/g0r1SYyQzVqIv28OW67TTaMVGivvJ09Z';
+const alchemyRpcUrl = 'https://eth-sepolia.g.alchemy.com/v2/g0r1SYyQzVqIv28OW67TTaMVGivvJ09Z';
 
-console.log('🔧 [WAGMI CONFIG] Configuring wagmi for SINGLE CHAIN - Base only:', {
-  chain: 'Base',
-  chainId: base.id,
+console.log('🔧 [WAGMI CONFIG] Configuring wagmi for SINGLE CHAIN - Sepolia only:', {
+  chain: 'Sepolia',
+  chainId: sepolia.id,
   rpcUrl: alchemyRpcUrl,
   chainsCount: 1,
   timestamp: new Date().toISOString()
 });
 
 const wagmiConfig = createConfig({
-  chains: [base], // Base network only - simple and clean
+  chains: [sepolia], // Sepolia testnet only - simple and clean
   transports: {
-    [base.id]: http(alchemyRpcUrl), // Base RPC
+    [sepolia.id]: http(alchemyRpcUrl), // Sepolia RPC
   },
 })
 

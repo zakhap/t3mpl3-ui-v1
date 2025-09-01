@@ -8,7 +8,7 @@ import PriceDisplay from "@/components/trading/price-display"
 import TradingPanel from "@/components/trading/trading-panel-wrapper"
 import { useETHPriceWithState } from "@/hooks/use-eth-price"
 
-export default function ETHUSDCTrading() {
+export default function ETHTempleTrading() {
   const [activeTab, setActiveTab] = useState("buy")
   const [showTooltip, setShowTooltip] = useState(false)
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
@@ -17,8 +17,8 @@ export default function ETHUSDCTrading() {
   const { price: currentPrice, loading: priceLoading, formattedPrice } = useETHPriceWithState()
   
   // Mock data for now (will be real in future phases)
-  const volume24h = 1250000 // 24h volume in USDC
-  const totalLiquidity = 5400000 // Total liquidity in USDC
+  const volume24h = 1250000 // 24h volume in Temple
+  const totalLiquidity = 5400000 // Total liquidity in Temple
 
   const isRedMode = activeTab === "sell"
   const themeColor = isRedMode ? "#cc7744" : "rgba(139, 183, 137, 1)"
@@ -148,7 +148,7 @@ export default function ETHUSDCTrading() {
           }}
         >
           <div className="text-center text-xs">
-            <span>DECENTRALIZED ETH/USDC TRADING ON </span>
+            <span>DECENTRALIZED ETH/TEMPLE TRADING ON </span>
             <span style={{ color: themeColor }}>BASE NETWORK</span>
             <span> WITH TERMINAL STYLE</span>
             <span className="blink ml-2">█</span>

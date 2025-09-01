@@ -3,19 +3,19 @@
  */
 
 import { PublicClient, WalletClient, parseEther } from "viem";
-import { PERMIT2_ADDRESS, USDC_ADDRESS } from "../contracts/addresses";
+import { PERMIT2_ADDRESS, TEMPLE_TOKEN_ADDRESS } from "../contracts/addresses";
 import { ERC20_ABI } from "../contracts/abis";
 
 /**
- * Checks current USDC allowance for Permit2
+ * Checks current Temple Token allowance for Permit2
  */
-export async function checkUSDCAllowance(
+export async function checkTempleAllowance(
   publicClient: PublicClient,
   userAddress: `0x${string}`
 ): Promise<bigint> {
   try {
     const allowance = await publicClient.readContract({
-      address: USDC_ADDRESS,
+      address: TEMPLE_TOKEN_ADDRESS,
       abi: ERC20_ABI,
       functionName: "allowance",
       args: [userAddress, PERMIT2_ADDRESS],
@@ -23,21 +23,21 @@ export async function checkUSDCAllowance(
     
     return allowance as bigint;
   } catch (error) {
-    console.error("Error checking USDC allowance:", error);
+    console.error("Error checking Temple Token allowance:", error);
     return BigInt(0);
   }
 }
 
 /**
- * Checks USDC balance for user
+ * Checks Temple Token balance for user
  */
-export async function checkUSDCBalance(
+export async function checkTempleBalance(
   publicClient: PublicClient,
   userAddress: `0x${string}`
 ): Promise<bigint> {
   try {
     const balance = await publicClient.readContract({
-      address: USDC_ADDRESS,
+      address: TEMPLE_TOKEN_ADDRESS,
       abi: ERC20_ABI,
       functionName: "balanceOf",
       args: [userAddress],
@@ -45,72 +45,72 @@ export async function checkUSDCBalance(
     
     return balance as bigint;
   } catch (error) {
-    console.error("Error checking USDC balance:", error);
+    console.error("Error checking Temple Token balance:", error);
     return BigInt(0);
   }
 }
 
 /**
- * Approves USDC spending for Permit2 (required for selling USDC)
+ * Approves Temple Token spending for Permit2 (required for selling Temple Token)
  */
-export async function approveUSDCForPermit2(
+export async function approveTempleForPermit2(
   walletClient: WalletClient,
   amount: bigint = BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff") // Max approval
 ): Promise<`0x${string}` | null> {
   try {
     const [userAddress] = await walletClient.getAddresses();
     
-    console.log("🔄 Approving USDC for Permit2...");
+    console.log("🔄 Approving Temple Token for Permit2...");
     
     const hash = await walletClient.writeContract({
-      address: USDC_ADDRESS,
+      address: TEMPLE_TOKEN_ADDRESS,
       abi: ERC20_ABI,
       functionName: "approve",
       args: [PERMIT2_ADDRESS, amount],
     });
 
-    console.log("✅ USDC approval transaction sent:", hash);
+    console.log("✅ Temple Token approval transaction sent:", hash);
     return hash;
   } catch (error) {
-    console.error("❌ USDC approval failed:", error);
+    console.error("❌ Temple Token approval failed:", error);
     return null;
   }
 }
 
 /**
- * Checks if user has sufficient USDC allowance for a transaction
+ * Checks if user has sufficient Temple Token allowance for a transaction
  */
-export async function hasInsufficientUSDCAllowance(
+export async function hasInsufficientTempleAllowance(
   publicClient: PublicClient,
   userAddress: `0x${string}`,
   requiredAmount: bigint
 ): Promise<boolean> {
-  const currentAllowance = await checkUSDCAllowance(publicClient, userAddress);
+  const currentAllowance = await checkTempleAllowance(publicClient, userAddress);
   return currentAllowance < requiredAmount;
 }
 
 /**
- * Checks if user has sufficient USDC balance for a transaction
+ * Checks if user has sufficient Temple Token balance for a transaction
  */
-export async function hasInsufficientUSDCBalance(
+export async function hasInsufficientTempleBalance(
   publicClient: PublicClient,
   userAddress: `0x${string}`,
   requiredAmount: bigint
 ): Promise<boolean> {
-  const currentBalance = await checkUSDCBalance(publicClient, userAddress);
+  const currentBalance = await checkTempleBalance(publicClient, userAddress);
   return currentBalance < requiredAmount;
 }
 
 /**
- * Gets formatted USDC balance (6 decimals)
+ * Gets formatted Temple Token balance (18 decimals)
  */
-export function formatUSDCAmount(amount: bigint): string {
-  return (Number(amount) / 1e6).toFixed(2);
+export function formatTempleAmount(amount: bigint): string {
+  return (Number(amount) / 1e18).toFixed(6);
 }
 
 /**
- * Converts USDC amount to wei (6 decimals)
+ * Converts Temple Token amount to wei (18 decimals)
  */
-export function parseUSDCAmount(amount: string): bigint {
-  return BigInt(Math.floor(Number(amount) * 1e6));
+export function parseTempleAmount(amount: string): bigint {
+  return parseEther(amount);
 }

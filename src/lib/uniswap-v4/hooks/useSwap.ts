@@ -125,7 +125,7 @@ export function useSwap(options: UseSwapOptions = {}): UseSwapReturn {
 }
 
 /**
- * Specialized hook for buy swaps (ETH -> USDC)
+ * Specialized hook for buy swaps (ETH -> Temple Token)
  */
 export function useBuySwap(options: UseSwapOptions = {}) {
   const baseSwap = useSwap(options);
@@ -133,7 +133,7 @@ export function useBuySwap(options: UseSwapOptions = {}) {
   const executeBuy = useCallback(
     async (amountIn: string, minAmountOut: bigint, slippagePercent: number = 10) => {
       const params: SwapParams = {
-        tokenAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // USDC on Base
+        tokenAddress: '0xE6BBfB40bAFe0Ec62eB687d5681C920B5d15FD17', // Temple Token on Sepolia
         amountIn,
         minAmountOut,
         isBuying: true,
@@ -152,7 +152,7 @@ export function useBuySwap(options: UseSwapOptions = {}) {
 }
 
 /**
- * Specialized hook for sell swaps (USDC -> ETH)
+ * Specialized hook for sell swaps (Temple Token -> ETH)
  */
 export function useSellSwap(options: UseSwapOptions = {}) {
   const baseSwap = useSwap(options);
@@ -160,7 +160,7 @@ export function useSellSwap(options: UseSwapOptions = {}) {
   const executeSell = useCallback(
     async (amountIn: string, minAmountOut: bigint, slippagePercent: number = 10) => {
       const params: SwapParams = {
-        tokenAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // USDC on Base
+        tokenAddress: '0xE6BBfB40bAFe0Ec62eB687d5681C920B5d15FD17', // Temple Token on Sepolia
         amountIn,
         minAmountOut,
         isBuying: false,

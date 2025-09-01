@@ -90,7 +90,7 @@ function useActualWalletNetwork() {
           if (walletNetworkId) {
             console.log('✅ [NETWORK CAPTURE] Direct wallet detection successful:', walletNetworkId)
             setActualChainId(walletNetworkId)
-            if (walletNetworkId !== 8453) {
+            if (walletNetworkId !== 11155111) {
               setLastSeenChainId(walletNetworkId)
             }
             setInitialDetectionDone(true)
@@ -98,7 +98,7 @@ function useActualWalletNetwork() {
             // Fallback to wagmi if direct query fails
             console.log('⚡ [NETWORK CAPTURE] Fallback to wagmi detection:', accountChainId)
             setActualChainId(accountChainId)
-            if (accountChainId !== 8453) {
+            if (accountChainId !== 11155111) {
               setLastSeenChainId(accountChainId)
             }
             setInitialDetectionDone(true)
@@ -120,16 +120,16 @@ function useActualWalletNetwork() {
   // Network change detection effect
   useEffect(() => {
     if (initialDetectionDone && accountChainId && accountChainId !== actualChainId) {
-      if (accountChainId !== 8453) {
+      if (accountChainId !== 11155111) {
         console.log('🚨 [NETWORK CAPTURE] Network switched to:', accountChainId)
         setActualChainId(accountChainId)
         setLastSeenChainId(accountChainId)
-      } else if (lastSeenChainId && lastSeenChainId !== 8453) {
+      } else if (lastSeenChainId && lastSeenChainId !== 11155111) {
         console.log('🔄 [NETWORK CAPTURE] Forced back to Base, keeping:', lastSeenChainId)
         // Keep showing the non-Base network for a bit
       } else {
         // Genuinely switched to Base
-        setActualChainId(8453)
+        setActualChainId(11155111)
       }
     }
   }, [accountChainId, actualChainId, lastSeenChainId, initialDetectionDone])
@@ -141,7 +141,7 @@ function useActualWalletNetwork() {
         const newChainId = parseInt(chainId, 16)
         console.log('🔄 [NETWORK LISTENER] Chain changed event detected:', newChainId)
         setActualChainId(newChainId)
-        if (newChainId !== 8453) {
+        if (newChainId !== 11155111) {
           setLastSeenChainId(newChainId)
         } else {
           // Successfully switched to Base, clear the last seen non-Base network
@@ -183,9 +183,9 @@ function useActualWalletNetwork() {
   
   return {
     chainId: effectiveChainId,
-    isSupported: !!chain || (actualChainId && actualChainId !== 8453), // Consider non-Base as supported for display
+    isSupported: !!chain || (actualChainId && actualChainId !== 11155111), // Consider non-Base as supported for display
     isConnected,
-    isUnsupported: isConnected && !chain && actualChainId === 8453,
+    isUnsupported: isConnected && !chain && actualChainId === 11155111,
     privyChainId: user?.wallet?.chainId,
     actualChainId,
   }
@@ -221,14 +221,14 @@ function NetworkDisplay({ themeColor }: { themeColor: string }) {
     wagmiChainId: chainId,
     detectedChainId,
     authenticated,
-    isBase: detectedChainId === 8453
+    isBase: detectedChainId === 11155111
   })
   
   // Simple logic: Base or Wrong Network
-  if (detectedChainId === 8453) {
+  if (detectedChainId === 11155111) {
     return (
       <span className="font-mono" style={{ color: themeColor }}>
-        Base (Mainnet)
+        Sepolia Testnet
       </span>
     )
   } else {
@@ -244,7 +244,7 @@ export default function WalletSection({ themeColor }: WalletSectionProps) {
   const [mounted, setMounted] = useState(false)
   const [pressedButton, setPressedButton] = useState<string | null>(null)
   const { login, logout, authenticated, user } = usePrivy()
-  const { ethBalance, usdcBalance, loading: balancesLoading, formattedEth, formattedUsdc } = useWalletBalancesWithState()
+  const { ethBalance, templeBalance, loading: balancesLoading, formattedEth, formattedTemple } = useWalletBalancesWithState()
   
   useEffect(() => {
     setMounted(true)
@@ -347,12 +347,12 @@ export default function WalletSection({ themeColor }: WalletSectionProps) {
               </span>
             </div>
             <div className="flex justify-between">
-              <span>USDC BALANCE:</span>
+              <span>TEMPLE BALANCE:</span>
               <span className="font-mono" style={{ color: themeColor }}>
                 {balancesLoading ? (
                   <span className="animate-pulse">...</span>
                 ) : (
-                  formattedUsdc
+                  formattedTemple
                 )}
               </span>
             </div>

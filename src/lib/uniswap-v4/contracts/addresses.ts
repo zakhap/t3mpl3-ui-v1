@@ -1,16 +1,16 @@
 /**
- * Uniswap V4 Protocol Contract Addresses
+ * Uniswap V4 Protocol Contract Addresses - Sepolia Testnet
  */
 
 // Core Uniswap V4 Contracts
-export const UNIVERSAL_ROUTER_ADDRESS = '0x6ff5693b99212da76ad316178a184ab56d299b43';
+export const UNIVERSAL_ROUTER_ADDRESS = '0x3A9D48AB9751398BbFa63ad67599Bb04e4BdF98b';
 export const PERMIT2_ADDRESS = '0x000000000022D473030F116dDEE9F6B43aC78BA3';
-export const V4_QUOTER_ADDRESS = '0xfcB683b34bA4bF29cB9eCe8D805c68132b4D4cF3';
-export const POOL_MANAGER_ADDRESS = '0x498581ff718922c3f8e6a244956af099b2652b2b';
-export const STATE_VIEW_ADDRESS = '0xa3c0c9b65bad0b08107aa264b0f3db444b867a71';
+export const V4_QUOTER_ADDRESS = '0x61b3f2011a92d183c7dbadbda940a7555ccf9227';
+export const POOL_MANAGER_ADDRESS = '0xE03A1074c86CFeDd5C142C4F04F1a1536e203543';
+export const STATE_VIEW_ADDRESS = '0xe1dd9c3fa50edb962e442f60dfbc432e24537e4c';
 
 // Token Contracts  
-export const USDC_ADDRESS = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
+export const TEMPLE_TOKEN_ADDRESS = '0xE6BBfB40bAFe0Ec62eB687d5681C920B5d15FD17';
 
 // Debug logging for contract addresses
 console.log('📋 [ADDRESSES DEBUG] Contract addresses loaded:', {
@@ -19,7 +19,7 @@ console.log('📋 [ADDRESSES DEBUG] Contract addresses loaded:', {
   V4_QUOTER: V4_QUOTER_ADDRESS,
   POOL_MANAGER: POOL_MANAGER_ADDRESS,
   STATE_VIEW: STATE_VIEW_ADDRESS,
-  USDC: USDC_ADDRESS
+  TEMPLE_TOKEN: TEMPLE_TOKEN_ADDRESS
 });
 
 // Addresses object for easier importing
@@ -29,5 +29,5 @@ export const ADDRESSES = {
   V4_QUOTER: V4_QUOTER_ADDRESS,
   POOL_MANAGER: POOL_MANAGER_ADDRESS,
   STATE_VIEW: STATE_VIEW_ADDRESS,
-  USDC: USDC_ADDRESS,
+  TEMPLE_TOKEN: TEMPLE_TOKEN_ADDRESS,
 } as const;

@@ -3,7 +3,7 @@
  */
 
 import { PublicClient, parseEther } from "viem";
-import { V4_QUOTER_ADDRESS, USDC_ADDRESS } from "../contracts/addresses";
+import { V4_QUOTER_ADDRESS, TEMPLE_TOKEN_ADDRESS } from "../contracts/addresses";
 import { QuoteParams, QuoteResult, PoolKey, POOL_CONSTANTS } from "../types";
 
 // V4 Quoter ABI
@@ -49,15 +49,15 @@ export class QuoteManager {
   }
 
   /**
-   * Gets the standard ETH/USDC pool key
+   * Gets the standard ETH/Temple Token pool key
    */
   private getPoolKey(): PoolKey {
     return {
       currency0: POOL_CONSTANTS.ZERO_ADDRESS, // ETH
-      currency1: USDC_ADDRESS,
+      currency1: TEMPLE_TOKEN_ADDRESS,
       fee: POOL_CONSTANTS.FEE_TIER,
       tickSpacing: POOL_CONSTANTS.TICK_SPACING,
-      hooks: POOL_CONSTANTS.ZERO_ADDRESS // No hooks
+      hooks: '0x092B9388Eea97444999C5fc6606eFF3d4CC000C8' // SimpleTempleHook
     };
   }
 
@@ -66,15 +66,24 @@ export class QuoteManager {
    */
   async getQuote(params: QuoteParams): Promise<QuoteResult | null> {
     try {
-      console.log('📊 [QUOTE DEBUG] Starting quote with environment details:', {
+      console.log('📊 [QUOTE START] Starting quote with environment details:', {
         timestamp: new Date().toISOString(),
         chainId: await this.publicClient.getChainId(),
         rpcUrl: this.publicClient.transport?.url || 'unknown',
         quoterAddress: V4_QUOTER_ADDRESS,
         params: {
-          poolKey: params.poolKey,
+          poolKey: {
+            currency0: params.poolKey.currency0,
+            currency1: params.poolKey.currency1,
+            fee: params.poolKey.fee,
+            tickSpacing: params.poolKey.tickSpacing,
+            hooks: params.poolKey.hooks
+          },
           zeroForOne: params.zeroForOne,
           exactAmount: params.exactAmount.toString(),
+          exactAmountFormatted: params.zeroForOne 
+            ? `${(Number(params.exactAmount) / 1e18).toFixed(6)} ETH`
+            : `${(Number(params.exactAmount) / 1e18).toFixed(6)} Temple`,
           hookData: params.hookData
         }
       });
@@ -88,9 +97,14 @@ export class QuoteManager {
 
       const [amountOut, gasEstimate] = result.result;
       
-      console.log('📊 [QUOTE DEBUG] Quote successful:', {
+      console.log('✅ [QUOTE SUCCESS] Quote successful:', {
         amountOut: amountOut.toString(),
-        gasEstimate: gasEstimate.toString()
+        amountOutFormatted: params.zeroForOne
+          ? `${(Number(amountOut) / 1e18).toFixed(6)} Temple`
+          : `${(Number(amountOut) / 1e18).toFixed(6)} ETH`,
+        gasEstimate: gasEstimate.toString(),
+        gasEstimateGwei: (Number(gasEstimate) / 1e9).toFixed(2) + ' Gwei',
+        timestamp: new Date().toISOString()
       });
       
       return {
@@ -98,13 +112,27 @@ export class QuoteManager {
         gasEstimate
       };
     } catch (error) {
-      console.error('❌ [QUOTE DEBUG] Error getting quote:', error);
+      console.error('❌ [QUOTE FAILED] Error getting quote:', {
+        error: error instanceof Error ? error.message : "Unknown error",
+        stack: error instanceof Error ? error.stack : undefined,
+        errorType: error?.constructor?.name,
+        errorCode: (error as any)?.code,
+        errorData: (error as any)?.data,
+        errorReason: (error as any)?.reason,
+        params: {
+          poolKey: params.poolKey,
+          zeroForOne: params.zeroForOne,
+          exactAmount: params.exactAmount.toString(),
+          hookData: params.hookData
+        },
+        timestamp: new Date().toISOString()
+      });
       return null;
     }
   }
 
   /**
-   * Gets a quote for buying USDC with ETH
+   * Gets a quote for buying Temple Token with ETH
    */
   async getBuyQuote(amountIn: string): Promise<QuoteResult | null> {
     if (!amountIn || Number(amountIn) <= 0) {
@@ -116,7 +144,7 @@ export class QuoteManager {
 
     const params: QuoteParams = {
       poolKey,
-      zeroForOne: true, // ETH -> USDC
+      zeroForOne: true, // ETH -> Temple Token
       exactAmount: exactAmountInWei,
       hookData: "0x"
     };
@@ -125,7 +153,7 @@ export class QuoteManager {
   }
 
   /**
-   * Gets a quote for selling USDC for ETH
+   * Gets a quote for selling Temple Token for ETH
    */
   async getSellQuote(amountIn: string): Promise<QuoteResult | null> {
     if (!amountIn || Number(amountIn) <= 0) {
@@ -133,12 +161,12 @@ export class QuoteManager {
     }
 
     const poolKey = this.getPoolKey();
-    // For USDC input, parse as USDC (6 decimals)
-    const exactAmountInWei = BigInt(Math.floor(Number(amountIn) * 1e6));
+    // For Temple Token input, parse as Temple Token (18 decimals)
+    const exactAmountInWei = parseEther(amountIn);
 
     const params: QuoteParams = {
       poolKey,
-      zeroForOne: false, // USDC -> ETH
+      zeroForOne: false, // Temple Token -> ETH
       exactAmount: exactAmountInWei,
       hookData: "0x"
     };
@@ -147,21 +175,21 @@ export class QuoteManager {
   }
 
   /**
-   * Gets current ETH price in USDC
+   * Gets current ETH price in Temple Token
    */
   async getETHPrice(): Promise<number | null> {
     try {
-      // Get quote for 1 ETH -> USDC
+      // Get quote for 1 ETH -> Temple Token
       const quote = await this.getBuyQuote("1");
       if (!quote) {
         return null;
       }
 
-      // Convert USDC amount (6 decimals) to readable number
-      const usdcAmount = Number(quote.amountOut) / 1e6;
+      // Convert Temple Token amount (18 decimals) to readable number
+      const templeAmount = Number(quote.amountOut) / 1e18;
       
-      console.log('✅ V4 ETH price from Quoter:', usdcAmount);
-      return usdcAmount;
+      console.log('✅ V4 ETH price from Quoter:', templeAmount);
+      return templeAmount;
     } catch (error) {
       console.error('Failed to get ETH price from V4:', error);
       return null;

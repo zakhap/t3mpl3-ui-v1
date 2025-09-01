@@ -1,7 +1,7 @@
 /**
  * Uniswap V4 Library - Public API
  * 
- * A comprehensive library for interacting with Uniswap V4 on Base network.
+ * A comprehensive library for interacting with Uniswap V4 on Sepolia testnet.
  * Provides both low-level managers and high-level React hooks for swap operations.
  */
 
@@ -39,7 +39,7 @@ export {
   V4_QUOTER_ADDRESS,
   POOL_MANAGER_ADDRESS,
   STATE_VIEW_ADDRESS,
-  USDC_ADDRESS,
+  TEMPLE_TOKEN_ADDRESS,
   ADDRESSES
 } from './contracts/addresses';
 
@@ -83,13 +83,13 @@ export {
 
 export {
   // Approval utilities
-  checkUSDCAllowance,
-  checkUSDCBalance,
-  approveUSDCForPermit2,
-  hasInsufficientUSDCAllowance,
-  hasInsufficientUSDCBalance,
-  formatUSDCAmount,
-  parseUSDCAmount
+  checkTempleAllowance,
+  checkTempleBalance,
+  approveTempleForPermit2,
+  hasInsufficientTempleAllowance,
+  hasInsufficientTempleBalance,
+  formatTempleAmount,
+  parseTempleAmount
 } from './utils/approvals';
 
 // Hooks

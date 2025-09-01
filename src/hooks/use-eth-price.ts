@@ -1,58 +1,49 @@
 import { useQuery } from '@tanstack/react-query'
 import { createPublicClient, http } from 'viem'
-import { base } from 'viem/chains'
+import { sepolia } from 'viem/chains'
 import { QuoteManager } from '@/lib/uniswap-v4'
 
-// Create viem public client for Base with Alchemy
+// Create viem public client for Sepolia with Alchemy
 const publicClient = createPublicClient({
-  chain: base,
-  transport: http('https://base-mainnet.g.alchemy.com/v2/g0r1SYyQzVqIv28OW67TTaMVGivvJ09Z'),
+  chain: sepolia,
+  transport: http('https://eth-sepolia.g.alchemy.com/v2/g0r1SYyQzVqIv28OW67TTaMVGivvJ09Z'),
 })
 
-// Fetch ETH price from Uniswap V4 Quoter on Base
-async function fetchETHPrice(): Promise<number> {
+// Fetch ETH to TEMPLE exchange rate from Uniswap V4 Quoter on Sepolia
+async function fetchETHToTempleRate(): Promise<number> {
   try {
-    // Initialize QuoteManager with Base public client
+    // Initialize QuoteManager with Sepolia public client
     const quoteManager = new QuoteManager(publicClient as any)
     
-    // Get current ETH price using V4 Quoter
-    const ethPrice = await quoteManager.getETHPrice()
+    // Get quote for 1 ETH -> TEMPLE to get the exchange rate
+    const quote = await quoteManager.getBuyQuote("1")
     
-    if (ethPrice && ethPrice > 0) {
-      console.log('✅ V4 Quoter ETH price:', ethPrice)
-      return ethPrice
+    if (quote && quote.amountOut) {
+      // Convert from Temple wei to readable format (18 decimals)
+      const templePerEth = Number(quote.amountOut) / 1e18
+      console.log('✅ V4 Quoter: 1 ETH = ', templePerEth, 'TEMPLE')
+      return templePerEth
     }
     
     throw new Error('Invalid V4 quote data')
   } catch (error) {
-    console.warn('⚠️ Uniswap V4 Quoter failed, using CoinGecko fallback:', error)
+    console.warn('⚠️ Uniswap V4 Quoter failed, using fallback:', error)
     
-    // Fallback to CoinGecko
-    try {
-      const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd')
-      const data = await response.json()
-      
-      if (data.ethereum?.usd && typeof data.ethereum.usd === 'number') {
-        console.log('✅ CoinGecko ETH price:', data.ethereum.usd)
-        return data.ethereum.usd
-      }
-    } catch (fallbackError) {
-      console.warn('⚠️ CoinGecko also failed:', fallbackError)
-    }
-    
-    return 3500 // Final fallback
+    // Fallback to a reasonable default rate
+    // This could be updated based on your expected exchange rate
+    return 1000 // Default: 1 ETH = 1000 TEMPLE
   }
 }
 
-// Main hook for fetching ETH price
+// Main hook for fetching ETH to TEMPLE exchange rate
 export function useETHPrice() {
   return useQuery({
-    queryKey: ['eth-price'],
+    queryKey: ['eth-temple-rate'],
     queryFn: async () => {
-      const price = await fetchETHPrice()
+      const rate = await fetchETHToTempleRate()
       
       return {
-        price,
+        price: rate, // This is now TEMPLE per ETH
         timestamp: Date.now(),
         source: 'uniswap-v4',
       }
@@ -69,15 +60,15 @@ export function useETHPriceWithState() {
   const { data, isLoading, isError, error } = useETHPrice()
   
   return {
-    price: data?.price || 3500, // Fallback to reasonable default
+    price: data?.price || 1000, // Fallback to 1 ETH = 1000 TEMPLE
     source: data?.source || 'fallback',
     loading: isLoading,
     error: isError ? error : null,
     timestamp: data?.timestamp,
-    // Formatted price for display
-    formattedPrice: data?.price ? `1ETH = $${data.price.toLocaleString('en-US', { 
+    // Formatted price for display - now showing TEMPLE per ETH
+    formattedPrice: data?.price ? `1 ETH = ${data.price.toLocaleString('en-US', { 
       minimumFractionDigits: 2, 
-      maximumFractionDigits: 2 
-    })}` : '1ETH = $3,500.00',
+      maximumFractionDigits: 18 
+    })} TEMPLE` : '1 ETH = 1,000.00 TEMPLE',
   }
 }

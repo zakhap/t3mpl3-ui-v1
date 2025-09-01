@@ -113,7 +113,7 @@ export default function TradingPanel({
   // Handle sell transaction
   const handleSell = async () => {
     if (!sellAmount || Number(sellAmount) <= 0) {
-      toast.error('Please enter a valid USDC amount')
+      toast.error('Please enter a valid Temple amount')
       return
     }
     
@@ -159,7 +159,7 @@ export default function TradingPanel({
       onMouseEnter={!isConnected ? onMouseEnter : undefined}
       onMouseLeave={!isConnected ? onMouseLeave : undefined}
     >
-      <div className="text-sm font-bold mb-2">TRADE ETH/USDC</div>
+      <div className="text-sm font-bold mb-2">TRADE ETH/TEMPLE</div>
       <div className="space-y-2">
         <Tabs 
           value={activeTab} 
@@ -224,7 +224,7 @@ export default function TradingPanel({
                 <div className="text-xs space-y-1">
                   <div>
                     RECEIVE: ~{buyAmount ? (Number.parseFloat(buyAmount) * currentPrice).toFixed(2) : "0.00"}{" "}
-                    USDC
+                    TEMPLE
                   </div>
                   <div>
                     FEE: ~${buyAmount ? (Number.parseFloat(buyAmount) * currentPrice * 0.003).toFixed(2) : "0.00"}
@@ -255,7 +255,7 @@ export default function TradingPanel({
                   onClick={handleBuy}
                   disabled={!isConnected || isTransacting}
                 >
-                  {isBuying ? '[BUYING...]' : '[BUY USDC]'}
+                  {isBuying ? '[BUYING...]' : '[BUY TEMPLE]'}
                 </Button>
               </div>
             </div>
@@ -266,7 +266,7 @@ export default function TradingPanel({
               <div className="space-y-2">
                 <div>
                   <Label htmlFor="sell-amount" className="text-xs">
-                    {'>'} AMOUNT (USDC):
+                    {'>'} AMOUNT (TEMPLE):
                   </Label>
                   <div className="relative">
                     <Input
@@ -329,7 +329,7 @@ export default function TradingPanel({
                   onClick={handleSell}
                   disabled={!isConnected || isTransacting}
                 >
-                  {isSelling ? '[SELLING...]' : '[SELL USDC]'}
+                  {isSelling ? '[SELLING...]' : '[SELL TEMPLE]'}
                 </Button>
               </div>
             </div>

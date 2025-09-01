@@ -18,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useBuySwap, useSellSwap, QuoteManager } from '@/lib/uniswap-v4'
 import { usePublicClient, useAccount, useChainId } from 'wagmi'
 import { usePrivy } from '@privy-io/react-auth'
-import { base } from 'wagmi/chains'
+import { sepolia } from 'wagmi/chains'
 import { toast } from 'sonner'
 
 
@@ -39,6 +39,9 @@ export default function TradingPanelInner({
   const [sellAmount, setSellAmount] = useState("")
   const [pressedButton, setPressedButton] = useState<string | null>(null)
   const [actualChainId, setActualChainId] = useState<number | null>(null)
+  const [buyQuote, setBuyQuote] = useState<string | null>(null)
+  const [sellQuote, setSellQuote] = useState<string | null>(null)
+  const [quoteLoading, setQuoteLoading] = useState(false)
   const publicClient = usePublicClient()
   const { user, authenticated } = usePrivy()
   const { chainId: accountChainId } = useAccount()
@@ -67,14 +70,88 @@ export default function TradingPanelInner({
   }, [authenticated, accountChainId])
 
   // Check if user is on wrong network
-  const isOnWrongNetwork = actualChainId !== null && actualChainId !== 8453
+  const isOnWrongNetwork = actualChainId !== null && actualChainId !== 11155111
   const isNetworkDisabled = isOnWrongNetwork
   
   // Network switching state
   const [isSwitchingNetwork, setIsSwitchingNetwork] = useState(false)
+
+  // Fetch quotes for display purposes
+  const fetchBuyQuote = async (amount: string) => {
+    if (!amount || Number(amount) <= 0 || !publicClient) {
+      setBuyQuote(null)
+      return
+    }
+    
+    try {
+      setQuoteLoading(true)
+      const quoteManager = new QuoteManager(publicClient)
+      const quote = await quoteManager.getBuyQuote(amount)
+      
+      if (quote && quote.amountOut) {
+        // Convert from Temple wei to readable format (18 decimals)
+        const templeAmount = (Number(quote.amountOut) / 1e18).toFixed(18)
+        setBuyQuote(templeAmount)
+      } else {
+        setBuyQuote(null)
+      }
+    } catch (error) {
+      console.error('❌ Failed to get buy quote for display:', error)
+      setBuyQuote(null)
+    } finally {
+      setQuoteLoading(false)
+    }
+  }
+
+  const fetchSellQuote = async (amount: string) => {
+    if (!amount || Number(amount) <= 0 || !publicClient) {
+      setSellQuote(null)
+      return
+    }
+    
+    try {
+      setQuoteLoading(true)
+      const quoteManager = new QuoteManager(publicClient)
+      const quote = await quoteManager.getSellQuote(amount)
+      
+      if (quote && quote.amountOut) {
+        // Convert from ETH wei to readable format (18 decimals)
+        const ethAmount = (Number(quote.amountOut) / 1e18).toFixed(6)
+        setSellQuote(ethAmount)
+      } else {
+        setSellQuote(null)
+      }
+    } catch (error) {
+      console.error('❌ Failed to get sell quote for display:', error)
+      setSellQuote(null)
+    } finally {
+      setQuoteLoading(false)
+    }
+  }
+
+  // Update quotes when amounts change
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      if (activeTab === 'buy') {
+        fetchBuyQuote(buyAmount)
+      }
+    }, 500) // 500ms debounce
+
+    return () => clearTimeout(debounceTimer)
+  }, [buyAmount, activeTab, publicClient])
+
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      if (activeTab === 'sell') {
+        fetchSellQuote(sellAmount)
+      }
+    }, 500) // 500ms debounce
+
+    return () => clearTimeout(debounceTimer)
+  }, [sellAmount, activeTab, publicClient])
   
-  // Switch to Base network
-  const switchToBase = async () => {
+  // Switch to Sepolia network
+  const switchToSepolia = async () => {
     if (!window.ethereum) {
       toast.error('Wallet not detected')
       return
@@ -83,10 +160,10 @@ export default function TradingPanelInner({
     setIsSwitchingNetwork(true)
     
     try {
-      // Request network switch to Base (0x2105 = 8453 in hex)
+      // Request network switch to Sepolia (0xaa36a7 = 11155111 in hex)
       await window.ethereum.request({
         method: 'wallet_switchEthereumChain',
-        params: [{ chainId: '0x2105' }],
+        params: [{ chainId: '0xaa36a7' }],
       })
       
       // Wait a moment for the network to switch, then re-detect
@@ -98,7 +175,7 @@ export default function TradingPanelInner({
         setIsSwitchingNetwork(false)
       }, 1000)
       
-      toast.success('Switched to Base network')
+      toast.success('Switched to Sepolia testnet')
     } catch (error: any) {
       console.error('Network switch error:', error)
       
@@ -108,21 +185,21 @@ export default function TradingPanelInner({
           await window.ethereum.request({
             method: 'wallet_addEthereumChain',
             params: [{
-              chainId: '0x2105',
-              chainName: 'Base',
+              chainId: '0xaa36a7',
+              chainName: 'Sepolia Testnet',
               nativeCurrency: {
                 name: 'Ethereum',
                 symbol: 'ETH',
                 decimals: 18,
               },
-              rpcUrls: ['https://mainnet.base.org'],
-              blockExplorerUrls: ['https://basescan.org'],
+              rpcUrls: ['https://eth-sepolia.g.alchemy.com/v2/g0r1SYyQzVqIv28OW67TTaMVGivvJ09Z'],
+              blockExplorerUrls: ['https://sepolia.etherscan.io'],
             }],
           })
-          toast.success('Base network added and switched')
+          toast.success('Sepolia testnet added and switched')
         } catch (addError) {
           console.error('Add network error:', addError)
-          toast.error('Failed to add Base network')
+          toast.error('Failed to add Sepolia testnet')
         }
       } else {
         toast.error('Failed to switch network')
@@ -232,7 +309,7 @@ export default function TradingPanelInner({
   // Handle sell transaction
   const handleSell = async () => {
     if (!sellAmount || Number(sellAmount) <= 0) {
-      toast.error('Please enter a valid USDC amount')
+      toast.error('Please enter a valid Temple amount')
       return
     }
     
@@ -279,7 +356,7 @@ export default function TradingPanelInner({
         boxShadow: `5px 5px 0px ${themeColor}`
       }}
     >
-      <div className="text-sm font-bold mb-2">TRADE ETH/USDC</div>
+      <div className="text-sm font-bold mb-2">TRADE ETH/TEMPLE</div>
       <div className="space-y-2">
         <Tabs 
           value={activeTab} 
@@ -341,17 +418,17 @@ export default function TradingPanelInner({
                 </div>
                 <div className="text-xs space-y-1">
                   <div>
-                    RECEIVE: ~{buyAmount ? (Number.parseFloat(buyAmount) * currentPrice).toFixed(2) : "0.00"}{" "}
-                    USDC
+                    RECEIVE: ~{quoteLoading ? "..." : (buyQuote || "0.00")}{" "}
+                    TEMPLE
                   </div>
                   <div>
-                    FEE: ~${buyAmount ? (Number.parseFloat(buyAmount) * currentPrice * 0.003).toFixed(2) : "0.00"}
+                    FEE: ~${buyAmount && buyQuote ? (Number.parseFloat(buyAmount) * currentPrice * 0.003).toFixed(2) : "0.00"}
                   </div>
                 </div>
                 
                 {isOnWrongNetwork && (
                   <Button
-                    onClick={switchToBase}
+                    onClick={switchToSepolia}
                     disabled={isSwitchingNetwork}
                     className="w-full text-xs py-2 font-mono font-bold mb-2"
                     style={{
@@ -400,7 +477,7 @@ export default function TradingPanelInner({
                   onClick={handleBuy}
                   disabled={isNetworkDisabled || isTransacting}
                 >
-                  {isBuying ? '[BUYING...]' : '[BUY USDC]'}
+                  {isBuying ? '[BUYING...]' : '[BUY TEMPLE]'}
                 </Button>
               </div>
             </div>
@@ -411,7 +488,7 @@ export default function TradingPanelInner({
               <div className="space-y-2">
                 <div>
                   <Label htmlFor="sell-amount" className="text-xs">
-                    {'>'} AMOUNT (USDC):
+                    {'>'} AMOUNT (TEMPLE):
                   </Label>
                   <div className="relative">
                     <Input
@@ -440,11 +517,11 @@ export default function TradingPanelInner({
                 <div className="text-xs space-y-1">
                   <div>
                     RECEIVE: ~
-                    {sellAmount ? (Number.parseFloat(sellAmount) / currentPrice).toFixed(6) : "0.000000"} ETH
+                    {quoteLoading ? "..." : (sellQuote || "0.00")} ETH
                   </div>
                   <div>
                     FEE: ~$
-                    {sellAmount
+                    {sellAmount && sellQuote
                       ? (Number.parseFloat(sellAmount) * 0.003).toFixed(2)
                       : "0.00"}
                   </div>
@@ -452,7 +529,7 @@ export default function TradingPanelInner({
                 
                 {isOnWrongNetwork && (
                   <Button
-                    onClick={switchToBase}
+                    onClick={switchToSepolia}
                     disabled={isSwitchingNetwork}
                     className="w-full text-xs py-2 font-mono font-bold mb-2"
                     style={{
@@ -501,7 +578,7 @@ export default function TradingPanelInner({
                   onClick={handleSell}
                   disabled={isNetworkDisabled || isTransacting}
                 >
-                  {isSelling ? '[SELLING...]' : '[SELL USDC]'}
+                  {isSelling ? '[SELLING...]' : '[SELL TEMPLE]'}
                 </Button>
               </div>
             </div>

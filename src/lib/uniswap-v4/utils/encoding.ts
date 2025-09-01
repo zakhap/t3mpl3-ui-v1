@@ -40,9 +40,9 @@ export function encodeSwapParams(
   zeroForOne: boolean,
   amountIn: string,
   minAmountOut: bigint,
-  isUSDCInput: boolean = false
+  isTempleInput: boolean = false
 ): `0x${string}` {
-  const parsedAmountIn = isUSDCInput ? parseUnits(amountIn, 6) : parseEther(amountIn);
+  const parsedAmountIn = parseEther(amountIn); // Both ETH and Temple Token use 18 decimals
   
   return encodeAbiParameters(
     [
@@ -181,39 +181,34 @@ export function encodePoolId(poolKey: PoolKey): `0x${string}` {
 }
 
 /**
- * Helper to parse amount for USDC (6 decimals) vs ETH (18 decimals)
+ * Helper to parse amount for Temple Token (18 decimals) vs ETH (18 decimals)
  */
-export function parseAmount(amount: string, isUSDC: boolean = false): bigint {
-  if (isUSDC) {
-    // USDC has 6 decimals
-    return BigInt(Math.floor(Number(amount) * 1e6));
-  } else {
-    // ETH has 18 decimals
-    return parseEther(amount);
-  }
+export function parseAmount(amount: string, isTemple: boolean = false): bigint {
+  // Both ETH and Temple Token have 18 decimals
+  return parseEther(amount);
 }
 
 /**
  * Get swap direction for pool operations
- * For our ETH/USDC pool: currency0=ETH, currency1=USDC
- * Buy (ETH->USDC): zeroForOne = true (swap currency0 for currency1)
- * Sell (USDC->ETH): zeroForOne = false (swap currency1 for currency0)
+ * For our ETH/Temple Token pool: currency0=ETH, currency1=Temple Token
+ * Buy (ETH->Temple Token): zeroForOne = true (swap currency0 for currency1)
+ * Sell (Temple Token->ETH): zeroForOne = false (swap currency1 for currency0)
  */
 export function getSwapDirection(isBuying: boolean): boolean {
-  return isBuying; // ETH -> USDC = true (zeroForOne), USDC -> ETH = false
+  return isBuying; // ETH -> Temple Token = true (zeroForOne), Temple Token -> ETH = false
 }
 
 /**
- * Get pool key for ETH/USDC pool on Base  
+ * Get pool key for ETH/Temple Token pool on Sepolia  
  * In Uniswap V4, native ETH is represented as 0x0 (CurrencyLibrary.NATIVE)
  * Pool key currencies should be ordered: lower address first
  */
 export function getPoolKey(): PoolKey {
   return {
     currency0: '0x0000000000000000000000000000000000000000', // ETH (native, always 0x0 in V4)
-    currency1: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // USDC on Base
+    currency1: '0xE6BBfB40bAFe0Ec62eB687d5681C920B5d15FD17', // Temple Token on Sepolia
     fee: 3000, // 0.3%
     tickSpacing: 60,
-    hooks: '0x0000000000000000000000000000000000000000' // No hooks
+    hooks: '0x092B9388Eea97444999C5fc6606eFF3d4CC000C8' // SimpleTempleHook
   };
 }

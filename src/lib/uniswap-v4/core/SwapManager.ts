@@ -3,7 +3,7 @@
  */
 
 import { PublicClient, WalletClient, parseEther } from "viem";
-import { UNIVERSAL_ROUTER_ADDRESS, PERMIT2_ADDRESS, USDC_ADDRESS } from "../contracts/addresses";
+import { UNIVERSAL_ROUTER_ADDRESS, PERMIT2_ADDRESS, TEMPLE_TOKEN_ADDRESS } from "../contracts/addresses";
 import { calculateMinAmountOut, calculateGasWithBuffer, createDeadline } from "../utils/calculations";
 import { 
   encodeBuyCommands,
@@ -19,11 +19,11 @@ import {
   parseAmount
 } from "../utils/encoding";
 import {
-  checkUSDCAllowance,
-  approveUSDCForPermit2,
-  hasInsufficientUSDCAllowance,
-  hasInsufficientUSDCBalance,
-  parseUSDCAmount
+  checkTempleAllowance,
+  approveTempleForPermit2,
+  hasInsufficientTempleAllowance,
+  hasInsufficientTempleBalance,
+  parseTempleAmount
 } from "../utils/approvals";
 import { 
   SwapParams, 
@@ -92,13 +92,13 @@ export class SwapManager {
     }
 
     const currentChain = await this.walletClient.getChainId();
-    if (currentChain !== 8453) {
-      throw new Error("Please switch to the Base network");
+    if (currentChain !== 11155111) {
+      throw new Error("Please switch to the Sepolia testnet");
     }
   }
 
   /**
-   * Encodes buy swap data (ETH -> USDC) using proper V4 encoding
+   * Encodes buy swap data (ETH -> Temple Token) using proper V4 encoding
    */
   private encodeBuyData(amountIn: string, minAmountOut: bigint): SwapData {
     console.log('🔧 [DEBUG] Starting encodeBuyData with:', { amountIn, minAmountOut: minAmountOut.toString() });
@@ -109,7 +109,7 @@ export class SwapManager {
     const parsedAmountIn = parseEther(amountIn);
     console.log('🔧 [DEBUG] Parsed amount in (wei):', parsedAmountIn.toString());
     
-    const zeroForOne = getSwapDirection(true); // ETH -> USDC
+    const zeroForOne = getSwapDirection(true); // ETH -> Temple Token
     console.log('🔧 [DEBUG] Swap direction zeroForOne:', zeroForOne);
     
     // Encode all components using utility functions
@@ -119,7 +119,7 @@ export class SwapManager {
     const actions = encodeSwapActions();
     console.log('🔧 [DEBUG] Encoded actions:', actions);
     
-    const swapParams = encodeSwapParams(poolKey, zeroForOne, amountIn, minAmountOut);
+    const swapParams = encodeSwapParams(poolKey, zeroForOne, amountIn, minAmountOut, false);
     console.log('🔧 [DEBUG] Encoded swap params:', swapParams);
     
     const settleParams = encodeSettleParams(poolKey.currency0, parsedAmountIn);
@@ -147,7 +147,7 @@ export class SwapManager {
   }
 
   /**
-   * Executes a buy swap (ETH -> USDC) using real V4 transactions
+   * Executes a buy swap (ETH -> Temple Token) using real V4 transactions
    */
   async executeBuySwap(params: SwapParams): Promise<SwapResult> {
     try {
@@ -157,7 +157,7 @@ export class SwapManager {
         rpcUrl: this.publicClient.transport?.url || 'unknown',
         universalRouter: UNIVERSAL_ROUTER_ADDRESS,
         permit2: PERMIT2_ADDRESS,
-        usdc: USDC_ADDRESS,
+        templeToken: TEMPLE_TOKEN_ADDRESS,
         nodeEnv: typeof window !== 'undefined' ? 'browser' : 'server',
         viteEnv: import.meta.env?.MODE || 'unknown'
       });
@@ -190,7 +190,16 @@ export class SwapManager {
       console.log('⏰ [DEBUG] Transaction deadline:', deadline);
 
       // Estimate gas
-      console.log('⛽ [DEBUG] Attempting gas estimation...');
+      console.log('⛽ [GAS EST] Attempting gas estimation for buy swap...', {
+        contract: UNIVERSAL_ROUTER_ADDRESS,
+        function: 'execute',
+        commands: commands,
+        inputsCount: inputs.length,
+        value: value.toString(),
+        userAddress,
+        timestamp: new Date().toISOString()
+      });
+      
       let gasEstimate: bigint;
       try {
         gasEstimate = await this.publicClient.estimateContractGas({
@@ -201,10 +210,22 @@ export class SwapManager {
           value,
           account: userAddress
         });
-        console.log('⛽ [DEBUG] Gas estimation successful:', gasEstimate.toString());
+        console.log('✅ [GAS EST] Gas estimation successful:', {
+          gasEstimate: gasEstimate.toString(),
+          gasEstimateGwei: (Number(gasEstimate) / 1e9).toFixed(2) + ' Gwei',
+          timestamp: new Date().toISOString()
+        });
       } catch (gasError) {
-        console.error('❌ [DEBUG] Gas estimation failed:', gasError);
-        throw new Error(`Gas estimation failed: ${gasError.message}`);
+        console.error('❌ [GAS EST] Gas estimation failed:', {
+          error: gasError instanceof Error ? gasError.message : "Unknown error",
+          stack: gasError instanceof Error ? gasError.stack : undefined,
+          errorType: gasError?.constructor?.name,
+          errorCode: (gasError as any)?.code,
+          errorData: (gasError as any)?.data,
+          errorReason: (gasError as any)?.reason,
+          timestamp: new Date().toISOString()
+        });
+        throw new Error(`Gas estimation failed: ${(gasError as any).message}`);
       }
 
       const gasLimit = calculateGasWithBuffer(gasEstimate);
@@ -212,6 +233,19 @@ export class SwapManager {
       console.log('💰 Executing Universal Router transaction...');
 
       // Execute transaction
+      console.log('🚀 [TX SUBMIT] Submitting buy swap transaction:', {
+        to: UNIVERSAL_ROUTER_ADDRESS,
+        functionName: 'execute',
+        args: {
+          commands: commands,
+          inputs: inputs.length,
+          deadline: createDeadline().toString()
+        },
+        gasLimit: gasLimit.toString(),
+        value: value.toString(),
+        timestamp: new Date().toISOString()
+      });
+
       const hash = await this.walletClient!.writeContract({
         address: UNIVERSAL_ROUTER_ADDRESS,
         abi: UNIVERSAL_ROUTER_ABI,
@@ -221,12 +255,26 @@ export class SwapManager {
         value,
       } as any);
 
-      console.log('📝 Transaction sent:', hash);
+      console.log('📝 [TX SENT] Buy swap transaction sent:', {
+        hash,
+        explorerUrl: `https://sepolia.etherscan.io/tx/${hash}`,
+        timestamp: new Date().toISOString()
+      });
 
       // Wait for confirmation
+      console.log('⏳ [TX WAIT] Waiting for transaction confirmation...');
       const receipt = await this.publicClient.waitForTransactionReceipt({ hash });
 
-      console.log('✅ Buy swap completed:', receipt.status);
+      console.log('✅ [TX COMPLETE] Buy swap transaction completed:', {
+        hash,
+        status: receipt.status,
+        blockNumber: receipt.blockNumber.toString(),
+        gasUsed: receipt.gasUsed.toString(),
+        effectiveGasPrice: receipt.effectiveGasPrice?.toString(),
+        logs: receipt.logs.length,
+        explorerUrl: `https://sepolia.etherscan.io/tx/${hash}`,
+        timestamp: new Date().toISOString()
+      });
 
       return {
         hash,
@@ -235,7 +283,23 @@ export class SwapManager {
       };
 
     } catch (error) {
-      console.error('❌ Buy swap failed:', error);
+      console.error('❌ [TX FAILED] Buy swap transaction failed:', {
+        error: error instanceof Error ? error.message : "Unknown error",
+        stack: error instanceof Error ? error.stack : undefined,
+        params: {
+          amountIn: params.amountIn,
+          minAmountOut: params.minAmountOut.toString(),
+          slippage: params.slippagePercent,
+          userAddress: params.userAddress
+        },
+        timestamp: new Date().toISOString(),
+        // Additional error details
+        errorType: error?.constructor?.name,
+        errorCode: (error as any)?.code,
+        errorData: (error as any)?.data,
+        errorReason: (error as any)?.reason,
+      });
+
       return {
         hash: "0x0" as `0x${string}`,
         success: false,
@@ -245,7 +309,7 @@ export class SwapManager {
   }
 
   /**
-   * Executes a sell swap (USDC -> ETH) with proper approvals and Permit2
+   * Executes a sell swap (Temple Token -> ETH) with proper approvals and Permit2
    */
   async executeSellSwap(params: SwapParams, userAddress: `0x${string}`): Promise<SwapResult> {
     try {
@@ -258,30 +322,45 @@ export class SwapManager {
         userAddress
       });
 
-      const requiredAmount = parseUSDCAmount(params.amountIn);
+      console.log('🔧 [AMOUNT PARSE] Parsing sell amount:', {
+        rawAmountIn: params.amountIn,
+        amountInType: typeof params.amountIn,
+        amountInLength: params.amountIn.length,
+        timestamp: new Date().toISOString()
+      });
 
-      // Check USDC balance first
-      if (await hasInsufficientUSDCBalance(this.publicClient, userAddress, requiredAmount)) {
-        throw new Error(`Insufficient USDC balance. Required: ${params.amountIn} USDC`);
+      const requiredAmount = parseEther(params.amountIn);
+
+      console.log('🔧 [AMOUNT PARSE] Parsed sell amount:', {
+        requiredAmount: requiredAmount.toString(),
+        requiredAmountFormatted: `${(Number(requiredAmount) / 1e18).toFixed(6)} Temple`,
+        timestamp: new Date().toISOString()
+      });
+
+      // Note: Allowing tiny amounts for testing purposes
+
+      // Check Temple Token balance first
+      if (await hasInsufficientTempleBalance(this.publicClient, userAddress, requiredAmount)) {
+        throw new Error(`Insufficient Temple Token balance. Required: ${params.amountIn} Temple`);
       }
 
-      // Check USDC allowance for Permit2
-      if (await hasInsufficientUSDCAllowance(this.publicClient, userAddress, requiredAmount)) {
-        console.log('⚠️ Insufficient USDC allowance, requesting approval...');
+      // Check Temple Token allowance for Permit2
+      if (await hasInsufficientTempleAllowance(this.publicClient, userAddress, requiredAmount)) {
+        console.log('⚠️ Insufficient Temple Token allowance, requesting approval...');
         
-        const approvalHash = await approveUSDCForPermit2(this.walletClient!);
+        const approvalHash = await approveTempleForPermit2(this.walletClient!);
         if (!approvalHash) {
-          throw new Error('USDC approval failed');
+          throw new Error('Temple Token approval failed');
         }
 
-        console.log('⏳ Waiting for USDC approval confirmation...');
+        console.log('⏳ Waiting for Temple Token approval confirmation...');
         const approvalReceipt = await this.publicClient.waitForTransactionReceipt({ hash: approvalHash });
         
         if (approvalReceipt.status !== "success") {
-          throw new Error('USDC approval transaction failed');
+          throw new Error('Temple Token approval transaction failed');
         }
         
-        console.log('✅ USDC approved for Permit2');
+        console.log('✅ Temple Token approved for Permit2');
       }
 
       // Get current nonce from Permit2 contract
@@ -289,14 +368,14 @@ export class SwapManager {
         address: PERMIT2_ADDRESS,
         abi: PERMIT2_ABI,
         functionName: "allowance",
-        args: [userAddress, USDC_ADDRESS, UNIVERSAL_ROUTER_ADDRESS],
+        args: [userAddress, TEMPLE_TOKEN_ADDRESS, UNIVERSAL_ROUTER_ADDRESS],
       });
 
       // Create permit signature
       const deadline = createDeadline(10); // 10 minutes
       const permitMessage = {
         details: {
-          token: USDC_ADDRESS,
+          token: TEMPLE_TOKEN_ADDRESS,
           amount: requiredAmount,
           expiration: deadline,
           nonce,
@@ -310,7 +389,7 @@ export class SwapManager {
       const signature = await this.walletClient!.signTypedData({
         domain: {
           name: 'Permit2',
-          chainId: 8453, // Base chain ID
+          chainId: 11155111, // Sepolia chain ID
           verifyingContract: PERMIT2_ADDRESS,
         },
         types: {
@@ -333,7 +412,7 @@ export class SwapManager {
       const permit: PermitData = {
         signature,
         details: {
-          token: USDC_ADDRESS,
+          token: TEMPLE_TOKEN_ADDRESS,
           amount: requiredAmount,
           expiration: Number(deadline),
           nonce: Number(nonce)
@@ -345,7 +424,7 @@ export class SwapManager {
       
       // Encode sell swap with permit using proper V4 encoding
       const poolKey = getPoolKey();
-      const zeroForOne = getSwapDirection(false); // USDC -> ETH
+      const zeroForOne = getSwapDirection(false); // Temple Token -> ETH
       
       console.log('🔧 Sell swap encoding details:', {
         poolKey,
@@ -359,13 +438,23 @@ export class SwapManager {
       const commands = encodeSellCommands();
       const actions = encodeSwapActions();
       const permitInputs = encodePermit2Data(permit);
-      const swapParams = encodeSwapParams(poolKey, zeroForOne, params.amountIn, minAmountOut, true);
+      const swapParams = encodeSwapParams(poolKey, zeroForOne, params.amountIn, minAmountOut, false); // Temple Token is 18 decimals, not USDC format
       const settleParams = encodeSettleParams(poolKey.currency1, requiredAmount);
       const takeParams = encodeTakeParams(poolKey.currency0, BigInt(0));
       
       const swapInputs = encodeRouterInputs(actions, [swapParams, settleParams, takeParams]);
 
       // Try to estimate gas, fallback to high limit if it fails
+      console.log('⛽ [GAS EST] Attempting gas estimation for sell swap...', {
+        contract: UNIVERSAL_ROUTER_ADDRESS,
+        function: 'execute',
+        commands: commands,
+        inputsCount: 2, // permitInputs + swapInputs
+        value: '0',
+        userAddress,
+        timestamp: new Date().toISOString()
+      });
+      
       let gasLimit: bigint;
       try {
         const gasEstimate = await this.publicClient.estimateContractGas({
@@ -376,8 +465,25 @@ export class SwapManager {
           value: BigInt(0),
           account: userAddress
         });
+        
+        console.log('✅ [GAS EST] Gas estimation successful for sell swap:', {
+          gasEstimate: gasEstimate.toString(),
+          gasEstimateGwei: (Number(gasEstimate) / 1e9).toFixed(2) + ' Gwei',
+          timestamp: new Date().toISOString()
+        });
+        
         gasLimit = calculateGasWithBuffer(gasEstimate);
-      } catch {
+      } catch (gasError) {
+        console.error('❌ [GAS EST] Gas estimation failed for sell swap, using fallback:', {
+          error: gasError instanceof Error ? gasError.message : "Unknown error",
+          errorType: gasError?.constructor?.name,
+          errorCode: (gasError as any)?.code,
+          errorData: (gasError as any)?.data,
+          errorReason: (gasError as any)?.reason,
+          fallbackGasLimit: '3000000',
+          timestamp: new Date().toISOString()
+        });
+        
         // Fallback to high gas limit if estimation fails
         gasLimit = BigInt(3000000);
       }
@@ -385,6 +491,25 @@ export class SwapManager {
       console.log('💰 Executing Universal Router sell transaction...');
 
       // Execute transaction
+      console.log('🚀 [TX SUBMIT] Submitting sell swap transaction:', {
+        to: UNIVERSAL_ROUTER_ADDRESS,
+        functionName: 'execute',
+        args: {
+          commands: commands,
+          inputs: 2, // permitInputs + swapInputs
+          deadline: createDeadline().toString()
+        },
+        gasLimit: gasLimit.toString(),
+        value: '0',
+        permit: {
+          token: permit.details.token,
+          amount: permit.details.amount.toString(),
+          expiration: permit.details.expiration,
+          nonce: permit.details.nonce
+        },
+        timestamp: new Date().toISOString()
+      });
+
       const hash = await this.walletClient!.writeContract({
         address: UNIVERSAL_ROUTER_ADDRESS,
         abi: UNIVERSAL_ROUTER_ABI,
@@ -394,12 +519,26 @@ export class SwapManager {
         value: BigInt(0),
       } as any);
 
-      console.log('📝 Transaction sent:', hash);
+      console.log('📝 [TX SENT] Sell swap transaction sent:', {
+        hash,
+        explorerUrl: `https://sepolia.etherscan.io/tx/${hash}`,
+        timestamp: new Date().toISOString()
+      });
 
       // Wait for confirmation
+      console.log('⏳ [TX WAIT] Waiting for transaction confirmation...');
       const receipt = await this.publicClient.waitForTransactionReceipt({ hash });
 
-      console.log('✅ Sell swap completed:', receipt.status);
+      console.log('✅ [TX COMPLETE] Sell swap transaction completed:', {
+        hash,
+        status: receipt.status,
+        blockNumber: receipt.blockNumber.toString(),
+        gasUsed: receipt.gasUsed.toString(),
+        effectiveGasPrice: receipt.effectiveGasPrice?.toString(),
+        logs: receipt.logs.length,
+        explorerUrl: `https://sepolia.etherscan.io/tx/${hash}`,
+        timestamp: new Date().toISOString()
+      });
 
       return {
         hash,
@@ -408,7 +547,25 @@ export class SwapManager {
       };
 
     } catch (error) {
-      console.error('❌ Sell swap failed:', error);
+      console.error('❌ [TX FAILED] Sell swap transaction failed:', {
+        error: error instanceof Error ? error.message : "Unknown error",
+        stack: error instanceof Error ? error.stack : undefined,
+        params: {
+          amountIn: params.amountIn,
+          minAmountOut: params.minAmountOut.toString(),
+          slippage: params.slippagePercent,
+          userAddress
+        },
+        timestamp: new Date().toISOString(),
+        // Additional error details
+        errorType: error?.constructor?.name,
+        errorCode: (error as any)?.code,
+        errorData: (error as any)?.data,
+        errorReason: (error as any)?.reason,
+        // Permit-specific debugging
+        permitDetails: (error as any)?.permitDetails,
+      });
+
       return {
         hash: "0x0" as `0x${string}`,
         success: false,

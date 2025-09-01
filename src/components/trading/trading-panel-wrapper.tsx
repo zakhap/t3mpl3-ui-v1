@@ -33,7 +33,7 @@ export default function TradingPanel(props: TradingPanelProps) {
           boxShadow: `5px 5px 0px ${props.themeColor}`
         }}
       >
-        <div className="text-sm font-bold mb-2">TRADE ETH/USDC</div>
+        <div className="text-sm font-bold mb-2">TRADE ETH/TEMPLE</div>
         <div className="text-xs">Loading...</div>
       </div>
     )
@@ -51,7 +51,7 @@ export default function TradingPanel(props: TradingPanelProps) {
         onMouseEnter={props.onMouseEnter}
         onMouseLeave={props.onMouseLeave}
       >
-        <div className="text-sm font-bold mb-2">TRADE ETH/USDC</div>
+        <div className="text-sm font-bold mb-2">TRADE ETH/TEMPLE</div>
         <div className="text-xs">Please connect your wallet to trade</div>
       </div>
     )
