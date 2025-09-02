@@ -191,8 +191,13 @@ function useActualWalletNetwork() {
   }
 }
 
-// Network display component - shows Base or Wrong Network
-function NetworkDisplay({ themeColor }: { themeColor: string }) {
+// Network display component - shows Sepolia or Wrong Network with switch button
+function NetworkDisplay({ themeColor, onSwitchNetwork, pressedButton, onButtonPress }: { 
+  themeColor: string 
+  onSwitchNetwork: () => void
+  pressedButton: string | null
+  onButtonPress: (id: string) => void
+}) {
   const isMounted = useIsMounted()
   const { chainId, actualChainId } = useActualWalletNetwork()
   const { authenticated } = usePrivy()
@@ -221,10 +226,10 @@ function NetworkDisplay({ themeColor }: { themeColor: string }) {
     wagmiChainId: chainId,
     detectedChainId,
     authenticated,
-    isBase: detectedChainId === 11155111
+    isSepolia: detectedChainId === 11155111
   })
   
-  // Simple logic: Base or Wrong Network
+  // Simple logic: Sepolia or Wrong Network
   if (detectedChainId === 11155111) {
     return (
       <span className="font-mono" style={{ color: themeColor }}>
@@ -233,9 +238,33 @@ function NetworkDisplay({ themeColor }: { themeColor: string }) {
     )
   } else {
     return (
-      <span className="font-mono" style={{ color: '#ff6b6b' }}>
-        Wrong Network
-      </span>
+      <div className="flex items-center gap-2">
+        <span className="font-mono" style={{ color: '#ff6b6b' }}>
+          Wrong Network
+        </span>
+        <Button
+          onClick={onSwitchNetwork}
+          className="text-xs px-2 py-1 font-mono font-bold"
+          style={{
+            border: `1px solid ${themeColor}`,
+            color: themeColor,
+            backgroundColor: '#1c1c1c',
+            boxShadow: pressedButton === 'switch-network' ? 'none' : `2px 2px 0px ${themeColor}`,
+            transform: pressedButton === 'switch-network' ? 'translate(2px, 2px)' : 'translate(0, 0)',
+          }}
+          onMouseDown={() => onButtonPress('switch-network')}
+          onMouseEnter={(e) => {
+            e.target.style.backgroundColor = themeColor
+            e.target.style.color = '#1c1c1c'
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.backgroundColor = '#1c1c1c'
+            e.target.style.color = themeColor
+          }}
+        >
+          Switch
+        </Button>
+      </div>
     )
   }
 }
@@ -257,6 +286,43 @@ export default function WalletSection({ themeColor }: WalletSectionProps) {
   
   const formatAddress = (addr: string) => {
     return `${addr.slice(0, 6)}...${addr.slice(-4)}`
+  }
+
+  // Network switching function
+  const switchToSepolia = async () => {
+    if (typeof window !== 'undefined' && window.ethereum) {
+      try {
+        // First try to switch to Sepolia
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: '0xaa36a7' }], // Sepolia chainId in hex
+        })
+      } catch (switchError: any) {
+        // If the network doesn't exist, add it
+        if (switchError.code === 4902) {
+          try {
+            await window.ethereum.request({
+              method: 'wallet_addEthereumChain',
+              params: [{
+                chainId: '0xaa36a7',
+                chainName: 'Sepolia Test Network',
+                nativeCurrency: {
+                  name: 'Sepolia ETH',
+                  symbol: 'ETH',
+                  decimals: 18,
+                },
+                rpcUrls: ['https://rpc.sepolia.org'],
+                blockExplorerUrls: ['https://sepolia.etherscan.io/'],
+              }],
+            })
+          } catch (addError) {
+            console.error('Error adding Sepolia network:', addError)
+          }
+        } else {
+          console.error('Error switching to Sepolia:', switchError)
+        }
+      }
+    }
   }
 
   if (!mounted) {
@@ -318,7 +384,12 @@ export default function WalletSection({ themeColor }: WalletSectionProps) {
           <div className="text-xs space-y-1">
             <div className="flex justify-between">
               <span>NETWORK:</span>
-              <NetworkDisplay themeColor={themeColor} />
+              <NetworkDisplay 
+                themeColor={themeColor} 
+                onSwitchNetwork={switchToSepolia}
+                pressedButton={pressedButton}
+                onButtonPress={handleButtonPress}
+              />
             </div>
             <div className="flex justify-between items-center">
               <span>ADDRESS:</span>
