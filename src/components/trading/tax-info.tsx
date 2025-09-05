@@ -81,7 +81,7 @@ export default function TaxInfo({ themeColor, templeBalance, walletAddress }: Ta
   }
 
   return (
-    <div className="px-4 pb-4 -mt-2">
+    <div className="px-4 pb-4 -mt-2 mb-6">
       <div className="text-xs mb-2">TAX INFORMATION</div>
       <div 
         className="p-2" 

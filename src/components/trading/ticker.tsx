@@ -48,7 +48,7 @@ export default function Ticker({ themeColor, themeBg }: TickerProps) {
         onMouseLeave={() => setShowTooltip(false)}
       >
         <div className="ticker py-1 px-4" style={{ color: themeColor }}>
-          {'MANIFESTO ░░░ '.repeat(20)}
+          {'READ THE MANIFESTO ░░░ '.repeat(20)}
         </div>
       </a>
     </>
