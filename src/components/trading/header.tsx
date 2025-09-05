@@ -12,16 +12,18 @@ export default function Header({ themeColor }: HeaderProps) {
       }}
     >
       <div className="text-center">
-        <pre className="text-2xl mb-2">
-          {`
- ████████╗██████╗ ███╗   ███╗██████╗ ██╗     ██████╗ 
- ╚══██╔══╝╚════██╗████╗ ████║██╔══██╗██║     ╚════██╗
-    ██║    █████╔╝██╔████╔██║██████╔╝██║      █████╔╝
-    ██║    ╚═══██╗██║╚██╔╝██║██╔═══╝ ██║      ╚═══██╗
-    ██║   ██████╔╝██║ ╚═╝ ██║██║     ███████╗██████╔╝
-    ╚═╝   ╚═════╝ ╚═╝     ╚═╝╚═╝     ╚══════╝╚═════╝ 
-`}
-        </pre>
+        <div className="flex justify-center mb-4">
+          <img 
+            src="/monochrome-temple.png" 
+            alt="TEMPLE" 
+            width={200} 
+            height={60}
+            style={{ 
+              filter: `drop-shadow(0 0 10px ${themeColor})`,
+              imageRendering: 'pixelated'
+            }}
+          />
+        </div>
         <p className="text-sm">TRADE MEMES, ACCRUE DEDUCTIONS. INVEST IN FUTURE WRITE-OFFS.</p>
         <p className="text-xs mt-1" style={{ color: themeColor }}>
           TAX-ADVANTAGED SPECULATION v1.0

@@ -20,6 +20,7 @@ import { usePublicClient, useAccount, useChainId } from 'wagmi'
 import { usePrivy } from '@privy-io/react-auth'
 import { sepolia } from 'wagmi/chains'
 import { toast } from 'sonner'
+import { recordLastTrade } from '@/utils/trade-tracking'
 
 
 interface TradingPanelInnerProps {
@@ -217,6 +218,11 @@ export default function TradingPanelInner({
     onSwapSuccess: (result) => {
       toast.success(`Buy successful! Transaction: ${result.hash.slice(0, 8)}...`)
       setBuyAmount('')
+      
+      // Record the trade timestamp for tax tracking
+      if (user?.wallet?.address) {
+        recordLastTrade(user.wallet.address)
+      }
     },
     onSwapError: (error) => {
       toast.error(`Buy failed: ${error}`)
@@ -230,6 +236,11 @@ export default function TradingPanelInner({
     onSwapSuccess: (result) => {
       toast.success(`Sell successful! Transaction: ${result.hash.slice(0, 8)}...`)
       setSellAmount('')
+      
+      // Record the trade timestamp for tax tracking
+      if (user?.wallet?.address) {
+        recordLastTrade(user.wallet.address)
+      }
     },
     onSwapError: (error) => {
       toast.error(`Sell failed: ${error}`)

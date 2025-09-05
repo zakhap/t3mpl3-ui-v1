@@ -3,10 +3,14 @@
 import { useState } from "react"
 import Ticker from "@/components/trading/ticker"
 import Header from "@/components/trading/header"
+import ProjectInfo from "@/components/trading/project-info"
 import WalletSection from "@/components/trading/wallet-section"
+import TaxInfo from "@/components/trading/tax-info"
 import PriceDisplay from "@/components/trading/price-display"
 import TradingPanel from "@/components/trading/trading-panel-wrapper"
 import { useETHPriceWithState } from "@/hooks/use-eth-price"
+import { useWalletBalancesWithState } from "@/hooks/use-wallet-balances"
+import { usePrivy } from '@privy-io/react-auth'
 
 export default function ETHTempleTrading() {
   const [activeTab, setActiveTab] = useState("buy")
@@ -15,6 +19,10 @@ export default function ETHTempleTrading() {
 
   // Real ETH price data
   const { price: currentPrice, loading: priceLoading, formattedPrice } = useETHPriceWithState()
+  
+  // Wallet balances and authentication
+  const { templeBalance } = useWalletBalancesWithState()
+  const { user } = usePrivy()
   
   // Mock data for now (will be real in future phases)
   const volume24h = 1250000 // 24h volume in Temple
@@ -51,7 +59,11 @@ export default function ETHTempleTrading() {
       <div className="container mx-auto p-4 max-w-4xl">
         <Header themeColor={themeColor} />
         
+        <ProjectInfo themeColor={themeColor} />
+        
         <WalletSection themeColor={themeColor} />
+        
+        <TaxInfo themeColor={themeColor} templeBalance={templeBalance} walletAddress={user?.wallet?.address} />
 
         {/* Top Row: Current Price + Trading Panel */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -120,40 +132,22 @@ export default function ETHTempleTrading() {
               boxShadow: `2px 2px 0px ${themeColor}`
             }}
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-              <div>
-                <div className="mb-2">► DECENTRALIZED TRADING:</div>
-                <div className="ml-4 mb-2">POWERED BY UNISWAP V4/V3 ON BASE NETWORK</div>
-
-                <div className="mb-2">► LOW FEES:</div>
-                <div className="ml-4 mb-2">0.3% TRADING FEES WITH OPTIMIZED GAS COSTS</div>
+            <div className="text-xs">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <div className="mb-2">► DECENTRALIZED TRADING: POWERED BY UNISWAP V4/V3 ON BASE NETWORK</div>
+                </div>
+                <div>
+                  <div className="mb-2">► LOW FEES: 0.3% TRADING FEES WITH OPTIMIZED GAS COSTS</div>
+                </div>
               </div>
-              <div>
-                <div className="mb-2">► TERMINAL INTERFACE:</div>
-                <div className="ml-4 mb-2">RETRO COMPUTING AESTHETIC FOR MODERN DEFI</div>
-
-                <div className="mb-2">► MISSION:</div>
-                <div className="ml-4 mb-2">"TRADE WITH STYLE IN THE TERMINAL FUTURE."</div>
+              <div className="mt-4 text-center">
+                <div className="mb-2 font-bold">Deduct if it goes down. Deduct more if it goes up.</div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Footer */}
-        <div 
-          className="p-2 mt-4" 
-          style={{ 
-            border: `1px solid ${themeColor}`,
-            boxShadow: `3px 3px 0px ${themeColor}`
-          }}
-        >
-          <div className="text-center text-xs">
-            <span>DECENTRALIZED ETH/TEMPLE TRADING ON </span>
-            <span style={{ color: themeColor }}>BASE NETWORK</span>
-            <span> WITH TERMINAL STYLE</span>
-            <span className="blink ml-2">█</span>
-          </div>
-        </div>
       </div>
     </div>
   )
