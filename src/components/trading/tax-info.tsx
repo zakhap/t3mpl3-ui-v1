@@ -81,41 +81,39 @@ export default function TaxInfo({ themeColor, templeBalance, walletAddress }: Ta
   }
 
   return (
-    <div className="px-4 pb-4 -mt-2 mb-6">
+    <div 
+      className="p-4 mb-8" 
+      style={{ 
+        border: `1px solid ${themeColor}`,
+        boxShadow: `4px 4px 0px ${themeColor}`
+      }}
+    >
       <div className="text-xs mb-2">TAX INFORMATION</div>
-      <div 
-        className="p-2" 
-        style={{ 
-          border: `1px solid ${themeColor}`,
-          boxShadow: `2px 2px 0px ${themeColor}`
-        }}
-      >
-        <div className="text-xs">
-          ⚠ Holding TEMPLE for more than 1 year changes the status of the tax implication from short to long term
-        </div>
-        {timeRemaining !== null && (
-          <div 
-            className="mt-3 p-2 text-center" 
-            style={{ 
-              border: `1px solid ${themeColor}`,
-              boxShadow: `1px 1px 0px ${themeColor}`,
-              backgroundColor: '#1a1a1a'
-            }}
-          >
-            <div className="text-xs font-bold" style={{ color: themeColor }}>
-              {timeRemaining.isComplete 
-                ? 'MAXIMUM WRITE-OFF: COMPLETE ✓' 
-                : `TIME UNTIL MAXIMUM WRITE-OFF:`
-              }
-            </div>
-            {!timeRemaining.isComplete && (
-              <div className="text-sm font-mono mt-1" style={{ color: themeColor }}>
-                {timeRemaining.days}d {timeRemaining.hours}h {timeRemaining.minutes}m {timeRemaining.seconds}s
-              </div>
-            )}
-          </div>
-        )}
+      <div className="text-xs">
+        ⚠ Holding TEMPLE for more than 1 year changes the status of the tax implication from short to long term
       </div>
+      {timeRemaining !== null && (
+        <div 
+          className="mt-3 p-2 text-center" 
+          style={{ 
+            border: `1px solid ${themeColor}`,
+            boxShadow: `1px 1px 0px ${themeColor}`,
+            backgroundColor: '#1a1a1a'
+          }}
+        >
+          <div className="text-xs font-bold" style={{ color: themeColor }}>
+            {timeRemaining.isComplete 
+              ? 'MAXIMUM WRITE-OFF: COMPLETE ✓' 
+              : `TIME UNTIL MAXIMUM WRITE-OFF:`
+            }
+          </div>
+          {!timeRemaining.isComplete && (
+            <div className="text-sm font-mono mt-1" style={{ color: themeColor }}>
+              {timeRemaining.days}d {timeRemaining.hours}h {timeRemaining.minutes}m {timeRemaining.seconds}s
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

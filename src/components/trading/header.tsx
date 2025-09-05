@@ -5,7 +5,7 @@ interface HeaderProps {
 export default function Header({ themeColor }: HeaderProps) {
   return (
     <div 
-      className="p-4 mb-4" 
+      className="p-4 mb-8" 
       style={{ 
         border: `1px solid ${themeColor}`,
         boxShadow: `4px 4px 0px ${themeColor}`

@@ -327,7 +327,7 @@ export default function WalletSection({ themeColor }: WalletSectionProps) {
 
   if (!mounted) {
     return (
-      <div className="p-4 mb-4">
+      <div className="p-4 mb-8">
         <div className="text-xs mb-2">WALLET CONNECTION</div>
         <div 
           className="p-2" 
@@ -343,15 +343,20 @@ export default function WalletSection({ themeColor }: WalletSectionProps) {
   }
 
   return (
-    <div className="p-4 mb-4">
+    <div 
+      className="p-4 mb-8" 
+      style={{ 
+        border: `1px solid ${themeColor}`,
+        boxShadow: `4px 4px 0px ${themeColor}`
+      }}
+    >
       <div className="text-xs mb-2">
         {authenticated ? "WALLET INFORMATION" : "WALLET CONNECTION"}
       </div>
       <div 
         className="p-2" 
         style={{ 
-          border: `1px solid ${themeColor}`,
-          boxShadow: `2px 2px 0px ${themeColor}`
+          border: `1px solid ${themeColor}`
         }}
       >
         {!authenticated ? (
