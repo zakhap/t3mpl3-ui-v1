@@ -12,15 +12,16 @@ export default function Header({ themeColor }: HeaderProps) {
       }}
     >
       <div className="text-center">
-        <div className="flex justify-center mb-4">
+        <div className="flex justify-center items-center w-full mb-4">
           <img 
-            src="/monochrome-temple.png" 
-            alt="TEMPLE" 
-            width={200} 
-            height={60}
+            src="/ascii-art-image.png" 
+            alt="T3MPL3" 
+            className="max-w-full h-auto block mx-auto"
             style={{ 
               filter: `drop-shadow(0 0 10px ${themeColor})`,
-              imageRendering: 'pixelated'
+              imageRendering: 'pixelated',
+              maxHeight: '270px',
+              display: 'block'
             }}
           />
         </div>
